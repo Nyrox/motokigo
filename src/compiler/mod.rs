@@ -48,7 +48,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             match s {
                 Statement::Assignment(i, expr) => {
                     generate_expr(&mut program, &ast, &func_meta, &expr);
-
+                    
                     if let Some(o) = data.global_symbols.get(&i.item) {
                         program.code.push(MemoryCell::with_data(
                             OpCode::Mov4Global,
@@ -56,21 +56,29 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
                         ));
                     } else {
                         func_meta
-                            .symbols
-                            .get_mut(i.item.as_str())
-                            .unwrap()
-                            .stack_offset = Some(stack_offset);
+                        .symbols
+                        .get_mut(i.item.as_str())
+                        .unwrap()
+                        .stack_offset = Some(stack_offset);
                         stack_offset += expr.get_type().unwrap().size();
                     }
+                    
+                    program.code.push(MemoryCell::with_data(OpCode::StmtMarker,  i.from.line as u16));
+
                 }
-                Statement::Return(expr) => {
+                Statement::Return(span, expr) => {
                     generate_expr(&mut program, &ast, &func_meta, &expr);
+
+                    program.code.push(MemoryCell::with_data(OpCode::StmtMarker, span.from.line as u16));
                     program
-                        .code
-                        .push(MemoryCell::with_data(OpCode::Ret, stack_offset as u16));
+                    .code
+                    .push(MemoryCell::with_data(OpCode::Ret, stack_offset as u16));
                     has_return = true;
+                    
+                    
                 }
-            }
+            };
+            
         }
         if !has_return {
             program.code.push(MemoryCell::plain_inst(OpCode::Void));

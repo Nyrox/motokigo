@@ -100,7 +100,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     },
                 );
             }
-            Statement::Return(_) => {}
+            Statement::Return(_, _) => {}
         }
 
         Ok(())

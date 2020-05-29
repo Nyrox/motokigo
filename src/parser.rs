@@ -154,7 +154,7 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
 
         match &token.item {
             Token::Return => {
-                output.push(Statement::Return(parse_expr_bp(tokens, 0)?));
+                output.push(Statement::Return(token.map(|_| ()), parse_expr_bp(tokens, 0)?));
             }
             Token::Identifier(s) => {
                 tokens.expect_token(Token::Equals)?;

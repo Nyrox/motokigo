@@ -208,14 +208,14 @@ impl Visitable for Expr {
 #[derive(Clone, Debug)]
 pub enum Statement {
     Assignment(Spanned<Ident>, Expr),
-    Return(Expr),
+    Return(Spanned<()>, Expr),
 }
 
 impl Visitable for Statement {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
         match self {
             Statement::Assignment(_, expr) => expr.visit(v)?,
-            Statement::Return(expr) => expr.visit(v)?,
+            Statement::Return(_, expr) => expr.visit(v)?,
         }
 
         v.post_statement(self)

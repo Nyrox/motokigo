@@ -35,7 +35,9 @@ impl BuiltInType for Vec3 {
     }
 }
 
-pub trait BuiltInCallable {
+use crate::glsl::BuiltInCallableGLSL;
+
+pub trait BuiltInCallable: BuiltInCallableGLSL {
     fn ident(&self) -> &str;
     fn vm_impl(&self, vm: &mut VirtualMachine);
     fn return_type(&self) -> TypeKind;

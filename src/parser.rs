@@ -112,11 +112,11 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
             }
             // func declarations
             t => {
-                let tk = match t {
+                let tk = match &t {
                     Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
                     t => match get_typekind(&t) {
                         Some(v) => Ok(v),
-                        None => Err(ParsingError::UnexpectedToken(token)),
+                        None => Err(ParsingError::UnexpectedToken(token.clone())),
                     },
                 }?;
                 let ident = tokens.expect_identifier()?;
@@ -134,6 +134,7 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
                     ident,
                     param_types: vec![],
                     statements,
+                    ret_type: token.map(|_| tk),
                 });
             }
         }
@@ -154,7 +155,10 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
 
         match &token.item {
             Token::Return => {
-                output.push(Statement::Return(token.map(|_| ()), parse_expr_bp(tokens, 0)?));
+                output.push(Statement::Return(
+                    token.map(|_| ()),
+                    parse_expr_bp(tokens, 0)?,
+                ));
             }
             Token::Identifier(s) => {
                 tokens.expect_token(Token::Equals)?;

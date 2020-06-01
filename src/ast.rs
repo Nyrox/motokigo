@@ -122,6 +122,15 @@ pub enum Literal {
     DecimalLiteral(f64),
 }
 
+impl Literal {
+    pub fn to_string(&self) -> String {
+        match self {
+            Literal::IntegerLiteral(i) => format!("{}", i),
+            Literal::DecimalLiteral(f) => format!("{}", f),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeKind {
     Void,
@@ -227,11 +236,13 @@ pub struct FunctionDeclaration {
     pub ident: Spanned<Ident>,
     pub param_types: Vec<Spanned<Ident>>,
     pub statements: Vec<Statement>,
+    pub ret_type: Spanned<TypeKind>,
 }
 
 impl Visitable for FunctionDeclaration {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
         v.function_decl(self)?;
+        self.ret_type.item.visit(v)?;
         self.statements.visit(v)
     }
 }

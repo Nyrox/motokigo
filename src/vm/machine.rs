@@ -1,8 +1,6 @@
-
 use super::*;
 use crate::compiler::program_data::ProgramData;
 use std::mem;
-
 
 #[derive(Debug, Clone)]
 pub struct VMProgram {
@@ -10,14 +8,11 @@ pub struct VMProgram {
     pub data: ProgramData,
 }
 
-
-
 impl VMProgram {
     pub fn new() -> Self {
         VMProgram {
             code: Vec::new(),
             data: ProgramData::new(),
-            
         }
     }
 }
@@ -40,7 +35,7 @@ impl<'a> VirtualMachine<'a> {
             isp: 0,
             depth: 0,
             stack_base: 0,
-            breakpoints: vec![]
+            breakpoints: vec![],
         }
     }
 
@@ -112,7 +107,7 @@ impl<'a> VirtualMachine<'a> {
 
     pub fn resume(mut self) -> VMState<'a> {
         loop {
-        let (op, p) = self.program.code[self.isp].get_inst();
+            let (op, p) = self.program.code[self.isp].get_inst();
             self.isp = self.isp + 1;
 
             match op.unwrap() {

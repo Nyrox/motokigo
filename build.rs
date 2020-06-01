@@ -11,7 +11,7 @@ fn main() {
     let out_path = Path::new(&out_dir).join("functions.rs");
     let mut output = String::new();
 
-    let re = Regex::new(r"fn (.+?)\(").unwrap();
+    let re = Regex::new(r"#\[generate_builtin_fn\(.+?\)\]\s*fn (.+?)\(").unwrap();
 
     let func_names: Vec<_> = fs::read_dir(functions_dir)
         .unwrap()

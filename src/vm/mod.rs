@@ -5,9 +5,7 @@ use crate::ast::TypeKind;
 
 mod exports {
     use super::machine;
-    pub use machine::{
-        VirtualMachine, VMProgram,
-    };
+    pub use machine::{VMProgram, VirtualMachine};
 }
 pub use exports::*;
 
@@ -30,7 +28,6 @@ pub enum OpCode {
     StmtMarker,
     LenPlaceholder,
 }
-
 
 pub struct VMBreakpointState<'a>(VirtualMachine<'a>, u16);
 pub struct VMRunFinishedState<'a>(VirtualMachine<'a>);
@@ -66,21 +63,30 @@ impl<'a> VMBreakpointState<'a> {
 
     pub fn generate_stack_view(&self) -> StackView {
         let data = &self.0.program.data;
-        let (current_fn, func_meta) = data.functions.iter()
+        let (current_fn, func_meta) = data
+            .functions
+            .iter()
             .filter(|(_, func)| func.address.unwrap() < self.0.isp)
-            .max_by_key(|(_, f)| f.address.unwrap()).unwrap();
+            .max_by_key(|(_, f)| f.address.unwrap())
+            .unwrap();
 
-        let symbols = func_meta.symbols.iter().flat_map(|(id, s)| {
-            let tk = s.type_kind.clone();
+        let symbols = func_meta
+            .symbols
+            .iter()
+            .flat_map(|(id, s)| {
+                let tk = s.type_kind.clone();
 
-            if self.0.stack.len() > (self.0.stack_base + s.stack_offset.unwrap()) {
-                let bytes = self.0.read_stack_bytes(self.0.stack_base + s.stack_offset.unwrap(), tk.size());
+                if self.0.stack.len() > (self.0.stack_base + s.stack_offset.unwrap()) {
+                    let bytes = self
+                        .0
+                        .read_stack_bytes(self.0.stack_base + s.stack_offset.unwrap(), tk.size());
 
-                Some((id.clone(), (tk, bytes.to_vec())))
-            } else {
-                None    
-            }        
-        }).collect();
+                    Some((id.clone(), (tk, bytes.to_vec())))
+                } else {
+                    None
+                }
+            })
+            .collect();
 
         StackView {
             current_fn: current_fn.clone(),
@@ -95,7 +101,6 @@ impl<'a> VMRunFinishedState<'a> {
         self.0
     }
 }
-
 
 #[derive(Clone)]
 pub struct MemoryCell {

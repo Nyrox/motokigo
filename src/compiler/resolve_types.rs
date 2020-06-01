@@ -113,8 +113,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
             .map(|e| e.get_type().unwrap())
             .collect::<Vec<_>>();
 
-        if let Some((_, builtin)) =
-            crate::builtins::get_builtin_fn(func.0.raw.as_ref(), &arg_types)
+        if let Some((_, builtin)) = crate::builtins::get_builtin_fn(func.0.raw.as_ref(), &arg_types)
         {
             func.0.resolved = Some((func.0.raw.item.clone(), builtin.return_type()));
             Ok(())

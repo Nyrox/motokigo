@@ -10,8 +10,8 @@ Motoki does not aim to revolutionize the way shaders are written, instead provid
 ## Features
 
 - [x] VM Implementation
-- [ ] Debugging support
-- [ ] GLSL Backend (soon)
+- [x] Debugging support (in-language)
+- [x] GLSL Backend
 - [ ] HLSL Backend (not planned)
 
 
@@ -46,4 +46,9 @@ Inputs to the shader are declared with the `in` and `uniform` keywords. These ar
 - [x] Basic Type-Checking, including multiple built in types
 - [ ] Product Types (Structs)
 - [ ] Control-Flow (If, Else, For-Loops)
+- [ ] Opague Types (Samplers)
 
+## GUI-Debugger
+
+Currently there is no standalone visual debugger, but Motoki is included in [Moto-Forestry](https://github.com/Nyrox/moto-forestry) as the primary shading language.  
+A standalone debugger is likely to come in the future (maybe in the form of a shadertoy-like utility).

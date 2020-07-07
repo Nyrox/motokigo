@@ -51,7 +51,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
         match tk {
             TypeKind::TypeRef(name) => match name.as_str() {
                 "Vec3" => {
-                    *tk = TypeKind::Vec3;
+                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 3);
                     Ok(())
                 }
                 _ => Ok(()),

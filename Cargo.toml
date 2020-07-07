@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies]
 bytemuck="1.2"
+num-traits="*"
+paste="*"
 builtins={ path="./builtins/" }
 
 

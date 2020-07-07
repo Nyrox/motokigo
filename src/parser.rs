@@ -66,7 +66,7 @@ pub fn get_typekind(t: &Token) -> Option<TypeKind> {
     Some(match t {
         Token::Float => TypeKind::F32,
         Token::Void => TypeKind::Void,
-        Token::Vec3 => TypeKind::Vec3,
+        Token::Vec3 => TypeKind::Vector(Box::new(TypeKind::F32), 3),
         _ => {
             return None;
         }
@@ -79,7 +79,7 @@ pub fn expect_typekind(tokens: &mut impl TokenSource) -> ParsingResult<Spanned<T
     let res = token.map(|t| match t {
         Token::Float => Ok(TypeKind::F32),
         Token::Void => Ok(TypeKind::Void),
-        Token::Vec3 => Ok(TypeKind::Vec3),
+        Token::Vec3 => Ok(TypeKind::Vector(Box::new(TypeKind::F32), 3)),
         Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
         t => Err(ParsingError::UnexpectedToken(token.map(|_| t.clone()))),
     });

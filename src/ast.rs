@@ -137,7 +137,7 @@ pub enum TypeKind {
     I32,
     F32,
     TypeRef(String),
-    Vec3,
+    Vector(Box<TypeKind>, usize),
 }
 
 impl TypeKind {
@@ -146,7 +146,7 @@ impl TypeKind {
             TypeKind::Void => 0,
             TypeKind::I32 => 4,
             TypeKind::F32 => 4,
-            TypeKind::Vec3 => 12,
+            TypeKind::Vector(typeKind, size) => typeKind.size() * size,
             _ => unimplemented!("{:?}", self),
         }
     }

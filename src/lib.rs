@@ -1,3 +1,5 @@
+#![feature(const_generics)]
+
 pub mod ast;
 pub mod builtins;
 pub mod compiler;

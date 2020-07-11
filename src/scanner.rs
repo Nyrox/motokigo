@@ -22,8 +22,6 @@ pub enum Token {
     Void,
     Return,
 
-    Vec3,
-
     Identifier(String),
     FloatLiteral(f64),
     IntegerLiteral(i64),

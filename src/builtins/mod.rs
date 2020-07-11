@@ -6,8 +6,8 @@ use std::ops::{Add, Div, Mul, Sub};
 
 pub mod functions;
 
-pub trait Scalar: Copy + Num + BuiltInType {}
-impl<T: Copy + Num + BuiltInType> Scalar for T {}
+pub trait Scalar: Copy + Num + ToPrimitive + BuiltInType {}
+impl<T: Copy + Num + ToPrimitive + BuiltInType> Scalar for T {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -75,15 +75,60 @@ impl<T: Scalar, const N: usize> Div<T> for Vector<T, N> {
 }
 
 impl<T: Scalar, const N: usize> Vector<T, N> {
-    pub fn comp_mul(mut self, other: Vector<T, N>) -> Vector<T, N> {
+    pub fn comp_mul(mut self, other: Self) -> Self {
         for i in 0..self.elems.len() {
             self.elems[i] = self.elems[i] * other.elems[i];
         }
         self
     }
+
+    pub fn lengthSquared(self) -> T {
+        let mut sum = Zero::zero();
+        for i in 0..self.elems.len() {
+            sum = sum + self.elems[i] * self.elems[i];
+        }
+        sum
+    }
+
+    pub fn length(self) -> f32 {
+        self.lengthSquared().to_f32().unwrap().sqrt()
+    }
+
+    pub fn dot(self, other: Self) -> T {
+        let mut sum = Zero::zero();
+        for i in 0..self.elems.len() {
+            sum = sum + self.elems[i] * other.elems[i];
+        }
+        sum
+    }
+}
+
+impl<T: Scalar + From<f32>, const N: usize> Vector<T, N> {
+    pub fn normalize(self) -> Self {
+        self / self.length().into()
+    }
 }
 
 //TODO: Add a macro to automate this
+impl<T: Scalar> Vector<T, 4> {
+    pub fn x(self) -> T {
+        self.elems[0]
+    }
+    pub fn y(self) -> T {
+        self.elems[1]
+    }
+    pub fn z(self) -> T {
+        self.elems[2]
+    }
+    pub fn w(self) -> T {
+        self.elems[3]
+    }
+
+    pub fn new(x: T, y: T, z: T, w: T) -> Self {
+        Self { elems: [x, y, z, w] }
+    }
+}
+
 impl<T: Scalar> Vector<T, 3> {
     pub fn x(self) -> T {
         self.elems[0]

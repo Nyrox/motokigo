@@ -50,10 +50,18 @@ impl<'a> Visitor for ResolveTypes<'a> {
     fn type_kind(&mut self, tk: &mut TypeKind) -> VResult {
         match tk {
             TypeKind::TypeRef(name) => match name.as_str() {
+                "Vec2" => {
+                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 2);
+                    Ok(())
+                },
                 "Vec3" => {
                     *tk = TypeKind::Vector(Box::new(TypeKind::F32), 3);
                     Ok(())
-                }
+                },
+                "Vec4" => {
+                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 4);
+                    Ok(())
+                },
                 _ => Ok(()),
             },
             _ => Ok(()),

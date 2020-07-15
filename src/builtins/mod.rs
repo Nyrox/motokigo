@@ -5,8 +5,8 @@ use num_traits::*;
 pub mod functions;
 pub mod vector;
 pub use vector::*;
-//pub mod matrix;
-//pub use matrix::*;
+pub mod matrix;
+pub use matrix::*;
 
 pub trait Scalar: Copy + Num + ToPrimitive + BuiltInType {}
 impl<T: Copy + Num + ToPrimitive + BuiltInType> Scalar for T {}

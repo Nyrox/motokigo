@@ -1,4 +1,4 @@
-use crate::builtins::{Scalar, BuiltInType};
+use crate::builtins::{Scalar, BuiltInType, Matrix};
 use crate::ast::TypeKind;
 use std::fmt::{Debug, Formatter, Result};
 use std::ops::{Add, Div, Mul, Sub};
@@ -6,9 +6,7 @@ use num_traits::*;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct Vector<T: Scalar, const N: usize> {
-    pub elems: [T; N],
-}
+pub struct Vector<T: Scalar, const N: usize>(Matrix<T, 1, N>);
 
 impl<T: Scalar, const N: usize> Default for Vector<T, N> {
     fn default() -> Self {
@@ -18,7 +16,7 @@ impl<T: Scalar, const N: usize> Default for Vector<T, N> {
 
 impl<T: Scalar + Debug, const N: usize> Debug for Vector<T, N> {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
-        self.elems.fmt(formatter)
+        self.0.fmt(formatter)
     }
 }
 
@@ -29,8 +27,8 @@ impl<T: Scalar, const N: usize> Mul<T> for Vector<T, N> {
     type Output = Self;
 
     fn mul(mut self, other: T) -> Self::Output {
-        for i in 0..self.elems.len() {
-            self.elems[i] = self.elems[i] * other;
+        for i in 0..N {
+            self.set_elem(i, self.get_elem(i) * other);
         }
         self
     }
@@ -40,8 +38,8 @@ impl<T: Scalar, const N: usize> Add<Self> for Vector<T, N> {
     type Output = Self;
 
     fn add(mut self, other: Self) -> Self::Output {
-        for i in 0..self.elems.len() {
-            self.elems[i] = self.elems[i] + other.elems[i];
+        for i in 0..N {
+            self.set_elem(i, self.get_elem(i) + other.get_elem(i));
         }
         self
     }
@@ -51,8 +49,8 @@ impl<T: Scalar, const N: usize> Sub<Self> for Vector<T, N> {
     type Output = Self;
 
     fn sub(mut self, other: Self) -> Self::Output {
-        for i in 0..self.elems.len() {
-            self.elems[i] = self.elems[i] - other.elems[i];
+        for i in 0..N {
+            self.set_elem(i, self.get_elem(i) - other.get_elem(i));
         }
         self
     }
@@ -62,25 +60,30 @@ impl<T: Scalar, const N: usize> Div<T> for Vector<T, N> {
     type Output = Self;
 
     fn div(mut self, other: T) -> Self::Output {
-        for i in 0..self.elems.len() {
-            self.elems[i] = self.elems[i] / other;
+        for i in 0..N {
+            self.set_elem(i, self.get_elem(i) / other);
         }
         self
     }
 }
 
 impl<T: Scalar, const N: usize> Vector<T, N> {
-    pub fn comp_mul(mut self, other: Self) -> Self {
-        for i in 0..self.elems.len() {
-            self.elems[i] = self.elems[i] * other.elems[i];
-        }
-        self
+    pub fn from_arr(elems: [T; N]) -> Self {
+        Self(Matrix { rows: [elems] })
+    }
+
+    pub fn get_elem(&self, n: usize) -> T {
+        self.0.rows[0][n]
+    }
+
+    pub fn set_elem(&mut self, n: usize, v: T) {
+        self.0.rows[0][n] = v;
     }
 
     pub fn lengthSquared(self) -> T {
         let mut sum = Zero::zero();
-        for i in 0..self.elems.len() {
-            sum = sum + self.elems[i] * self.elems[i];
+        for i in 0..N {
+            sum = sum + self.get_elem(i) * self.get_elem(i);
         }
         sum
     }
@@ -91,8 +94,8 @@ impl<T: Scalar, const N: usize> Vector<T, N> {
 
     pub fn dot(self, other: Self) -> T {
         let mut sum = Zero::zero();
-        for i in 0..self.elems.len() {
-            sum = sum + self.elems[i] * other.elems[i];
+        for i in 0..N {
+            sum = sum + self.get_elem(i) * other.get_elem(i);
         }
         sum
     }
@@ -107,49 +110,49 @@ impl<T: Scalar + From<f32>, const N: usize> Vector<T, N> {
 //TODO: Add a macro to automate this
 impl<T: Scalar> Vector<T, 4> {
     pub fn x(self) -> T {
-        self.elems[0]
+        self.get_elem(0)
     }
     pub fn y(self) -> T {
-        self.elems[1]
+        self.get_elem(1)
     }
     pub fn z(self) -> T {
-        self.elems[2]
+        self.get_elem(2)
     }
     pub fn w(self) -> T {
-        self.elems[3]
+        self.get_elem(3)
     }
 
     pub fn new(x: T, y: T, z: T, w: T) -> Self {
-        Self { elems: [x, y, z, w] }
+        Self::from_arr([x, y, z, w])
     }
 }
 
 impl<T: Scalar> Vector<T, 3> {
     pub fn x(self) -> T {
-        self.elems[0]
+        self.get_elem(0)
     }
     pub fn y(self) -> T {
-        self.elems[1]
+        self.get_elem(1)
     }
     pub fn z(self) -> T {
-        self.elems[2]
+        self.get_elem(2)
     }
 
     pub fn new(x: T, y: T, z: T) -> Self {
-        Self { elems: [x, y, z] }
+        Self::from_arr([x, y, z])
     }
 }
 
 impl<T: Scalar> Vector<T, 2> {
     pub fn x(&self) -> T {
-        self.elems[0]
+        self.get_elem(0)
     }
     pub fn y(&self) -> T {
-        self.elems[1]
+        self.get_elem(1)
     }
 
     pub fn new(x: T, y: T) -> Self {
-        Self { elems: [x, y] }
+        Self::from_arr([x, y])
     }
 }
 

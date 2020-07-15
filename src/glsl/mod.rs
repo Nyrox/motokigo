@@ -10,7 +10,7 @@ pub trait BuiltInCallableGLSL {
 fn get_glsl_type(tk: &TypeKind) -> String {
     match tk {
         TypeKind::F32 => "float".to_owned(),
-        TypeKind::Vector(typeKind, size) => format!("vec{}", size),
+        TypeKind::Vector(_, size) => format!("vec{}", size),
         TypeKind::Void => "void".to_owned(),
         t => {
             dbg!(t);

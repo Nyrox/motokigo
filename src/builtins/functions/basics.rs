@@ -72,9 +72,9 @@ implement_vec_op!(Vec4, Vector<f32, 4>);
 implement_vec_op!(Vec3, Vector<f32, 3>);
 implement_vec_op!(Vec2, Vector<f32, 2>);
 
-generate_vector_ctor!(Vec2(x, y));
-generate_vector_ctor!(Vec3(x, y, z));
-generate_vector_ctor!(Vec4(x, y, z, w));
+generate_vector_ctor!(2);
+generate_vector_ctor!(3);
+generate_vector_ctor!(4);
 
 generate_matrix_ctor!(2, 2);
 generate_matrix_ctor!(2, 3);

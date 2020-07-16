@@ -146,37 +146,23 @@ pub fn generate_builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream 
     .into()
 }
 
-#[derive(Debug)]
-struct Decl {
-    ident: Ident,
-    paren_token: token::Paren,
-    args: Punctuated<Ident, Token![,]>,
-}
-
-impl Parse for Decl {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        Ok(Self {
-            ident: input.parse()?,
-            paren_token: parenthesized!(content in input),
-            args: content.parse_terminated(IdentExt::parse_any)?,
-        })
-    }
-}
-
 #[proc_macro]
 pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
-    let parsed = syn::parse_macro_input!(item as Decl);
-    let args = parsed.args;
-
-    let args_typed_f32 = args.iter().map(|x| quote!{#x: f32});
-    let args_typed_str = args.iter().map(|x| quote!{#x: &str});
+    let n: usize = syn::parse_macro_input!(item as LitInt).to_string().parse().unwrap();
+    let args_packed = (0..n).map(|x| {
+        let ident = Ident::new(&format!("m{}", x), proc_macro::Span::call_site().into());
+        (quote!{#ident}, quote!{#ident: f32}, quote!{#ident: &str})
+    });
+    let args = args_packed.clone().map(|x| x.0);
+    let args_quote = quote!{ #(#args),* };
+    let args_typed_f32 = args_packed.clone().map(|x| x.1);
+    let args_typed_str = args_packed.clone().map(|x| x.2);
     
-    let name = parsed.ident.to_string();
-    let name_ident = parsed.ident;
+    let name = format!("Vec{}", n);
+    let name_ident = Ident::new(&name, proc_macro::Span::call_site().into());
     let name_lower = name.to_lowercase();
     
-    let fmt_string = (0..args.len() - 1).fold("{}".to_string(), |acc, _| acc + ", {}");
+    let fmt_string = (0..n-1).fold("{}".to_string(), |acc, _| acc + ", {}");
     let fmt_string = format!("{}({})", name_lower, fmt_string);
     let impl_string = format!("{}Constructor", name);
     let impl_ident = Ident::new(&impl_string, proc_macro::Span::call_site().into());
@@ -184,12 +170,12 @@ pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
     (quote! {
         #[generate_builtin_fn(#name)]
         fn #impl_ident(#(#args_typed_f32),*) -> #name_ident {
-            #name_ident::new(#args)
+            #name_ident::new(#args_quote)
         }
         
         #[generate_glsl_impl_inline(#impl_string)]
         fn generate(#(#args_typed_str),*) -> String {
-            format!(#fmt_string, #args)
+            format!(#fmt_string, #args_quote)
         }
     })
     .into()

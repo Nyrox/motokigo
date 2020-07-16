@@ -1,6 +1,5 @@
-use proc_macro::{TokenStream, TokenTree};
-use quote::quote;
-use quote::ToTokens;
+use proc_macro2::{TokenStream, TokenTree};
+use quote::{quote, format_ident, ToTokens};
 use syn::*;
 use syn::parse::*;
 use syn::punctuated::*;
@@ -8,7 +7,7 @@ use syn::ext::*;
 use itertools::Itertools;
 
 #[proc_macro_attribute]
-pub fn generate_glsl_impl_inline(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn generate_glsl_impl_inline(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let opts = syn::parse_macro_input!(attr as AttributeArgs);
     let mut func = syn::parse_macro_input!(item as ItemFn);
 
@@ -48,12 +47,11 @@ pub fn generate_glsl_impl_inline(attr: TokenStream, item: TokenStream) -> TokenS
                 rv
             }
         }
-    })
-    .into()
+    }).into()
 }
 
 #[proc_macro_attribute]
-pub fn generate_builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn generate_builtin_fn(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let opts = syn::parse_macro_input!(attr as AttributeArgs);
     let mut func = syn::parse_macro_input!(item as ItemFn);
 
@@ -147,10 +145,10 @@ pub fn generate_builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream 
 }
 
 #[proc_macro]
-pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
+pub fn generate_vector_ctor(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let n: usize = syn::parse_macro_input!(item as LitInt).to_string().parse().unwrap();
     let args_packed = (0..n).map(|x| {
-        let ident = Ident::new(&format!("m{}", x), proc_macro::Span::call_site().into());
+        let ident = format_ident!("m{}", x);
         (quote!{#ident}, quote!{#ident: f32}, quote!{#ident: &str})
     });
     let args = args_packed.clone().map(|x| x.0);
@@ -159,13 +157,13 @@ pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
     let args_typed_str = args_packed.clone().map(|x| x.2);
     
     let name = format!("Vec{}", n);
-    let name_ident = Ident::new(&name, proc_macro::Span::call_site().into());
+    let name_ident = format_ident!("{}", &name);
     let name_lower = name.to_lowercase();
     
     let fmt_string = (0..n-1).fold("{}".to_string(), |acc, _| acc + ", {}");
     let fmt_string = format!("{}({})", name_lower, fmt_string);
     let impl_string = format!("{}Constructor", name);
-    let impl_ident = Ident::new(&impl_string, proc_macro::Span::call_site().into());
+    let impl_ident = format_ident!("{}", &impl_string);
 
     (quote! {
         #[generate_builtin_fn(#name)]
@@ -182,19 +180,40 @@ pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn generate_matrix_ctor(item: TokenStream) -> TokenStream {
+pub fn generate_matrix_ctor(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let parsed = item
         .into_iter()
         .filter_map(|x| match x {
-            TokenTree::Literal(l) => Some(l.to_string().parse::<usize>().unwrap()),
+            proc_macro::TokenTree::Literal(l) => Some(l.to_string().parse::<usize>().unwrap()),
             _ => None
         })
         .collect::<Vec<_>>();
     let (m, n) = (parsed[0], parsed[1]);
 
-    let args_packed = (0..n*m).map(|x| {
-        let ident = Ident::new(&format!("m{}", x), proc_macro::Span::call_site().into());
-        (quote!{#ident}, quote!{#ident: f32}, quote!{#ident: &str})
+    let mut ctors = generate_matrix_ctor_inner(m, n, m * n, quote!(f32), "", |args| {
+        let chunks = args.chunks(n);
+        let rows_arr = chunks.into_iter().map(|x| quote!{ [ #(#x),* ] });
+        quote!{
+            Matrix::new([
+                #(#rows_arr),*
+            ])
+        }
+    });
+    ctors.extend(generate_matrix_ctor_inner(m, n, m, format_ident!("Vec{}", n), "Vector", |args| {
+        quote!{
+            Matrix::from_vecs([
+                #(#args),*
+            ])
+        }
+    }));
+    
+    ctors
+}
+
+fn generate_matrix_ctor_inner(m: usize, n: usize, params: usize, param_type: impl ToTokens, name_suffix: &str, body: impl Fn(Vec<Ident>) -> TokenStream) -> proc_macro::TokenStream {
+    let args_packed = (0..params).map(|x| {
+        let ident = format_ident!("m{}", x);
+        (ident.clone(), quote!{#ident: #param_type}, quote!{#ident: &str})
     });
     let args = args_packed.clone().map(|x| x.0);
     let args_typed_f32 = args_packed.clone().map(|x| x.1);
@@ -205,23 +224,20 @@ pub fn generate_matrix_ctor(item: TokenStream) -> TokenStream {
     } else {
         format!("Mat{}x{}", m, n)
     };
-    let name_ident = Ident::new(&name, proc_macro::Span::call_site().into());
+    let name_ident = format_ident!("{}", &name);
     let name_lower = name.to_lowercase();
     
-    let fmt_string = (0..n*m-1).fold("{}".to_string(), |acc, _| acc + ", {}");
+    let fmt_string = (0..params-1).fold("{}".to_string(), |acc, _| acc + ", {}");
     let fmt_string = format!("{}({})", name_lower, fmt_string);
-    let impl_string = format!("{}Constructor", name);
-    let impl_ident = Ident::new(&impl_string, proc_macro::Span::call_site().into());
+    let impl_string = format!("{}{}Constructor", name, name_suffix);
+    let impl_ident = format_ident!("{}", &impl_string);
 
-    let chunks = args.clone().chunks(n);
-    let rows_arr = (&chunks).into_iter().map(|x| quote!{ [ #(#x),* ] });
+    let body_result = body(args.clone().collect());
 
     (quote! {
         #[generate_builtin_fn(#name)]
         fn #impl_ident(#(#args_typed_f32),*) -> #name_ident {
-            Matrix::new([
-                #(#rows_arr),*
-            ])
+            #body_result
         }
         
         #[generate_glsl_impl_inline(#impl_string)]

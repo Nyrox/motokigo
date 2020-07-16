@@ -39,6 +39,14 @@ impl<T: Scalar, const M: usize, const N: usize> Matrix<T, M, N> {
         Self { rows: arr }
     }
 
+    pub fn from_vecs(vecs: [Vector<T, N>; M]) -> Self {
+        let mut res = [[Zero::zero(); N]; M];
+        for (i, v) in vecs.iter().enumerate() {
+            res[i] = v.to_arr();
+        }
+        Self { rows: res }
+    }
+
     pub fn get_elem(self, row: usize, col: usize) -> T {
         self.rows[row][col]
     }

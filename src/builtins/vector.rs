@@ -72,6 +72,10 @@ impl<T: Scalar, const N: usize> Vector<T, N> {
         Self(Matrix { rows: [elems] })
     }
 
+    pub fn to_arr(self) -> [T; N] {
+        self.0.rows[0]
+    }
+
     pub fn get_elem(&self, n: usize) -> T {
         self.0.rows[0][n]
     }

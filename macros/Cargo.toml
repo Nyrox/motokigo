@@ -13,3 +13,4 @@ proc-macro=true
 syn={ version="1.0", features=["full", "extra-traits"] }
 quote="1.0"
 itertools="*"
+proc-macro2="1.0"

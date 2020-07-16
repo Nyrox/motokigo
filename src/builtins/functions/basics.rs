@@ -1,8 +1,12 @@
 use crate::ast::TypeKind;
 use crate::builtins::*;
 use crate::vm::VirtualMachine;
-use builtins::generate_builtin_fn;
-use builtins::generate_glsl_impl_inline;
+use builtins::{
+    generate_builtin_fn, 
+    generate_glsl_impl_inline, 
+    generate_vector_ctor,
+    generate_matrix_ctor
+};
 
 use crate::glsl::compiler::GenerateGLSL;
 use crate::glsl::BuiltInCallableGLSL;
@@ -68,35 +72,19 @@ implement_vec_op!(Vec4, Vector<f32, 4>);
 implement_vec_op!(Vec3, Vector<f32, 3>);
 implement_vec_op!(Vec2, Vector<f32, 2>);
 
-#[generate_builtin_fn("Vec2")]
-fn Vec2Constructor(x: f32, y: f32) -> Vec2 {
-    Vec2::new(x, y)
-}
+generate_vector_ctor!(Vec2(x, y));
+generate_vector_ctor!(Vec3(x, y, z));
+generate_vector_ctor!(Vec4(x, y, z, w));
 
-#[generate_glsl_impl_inline("Vec2Constructor")]
-fn generate(a: &str, b: &str) -> String {
-    format!("vec2({}, {})", a, b)
-}
-
-#[generate_builtin_fn("Vec3")]
-fn Vec3Constructor(x: f32, y: f32, z: f32) -> Vec3 {
-    Vec3::new(x, y, z)
-}
-
-#[generate_glsl_impl_inline("Vec3Constructor")]
-fn generate(a: &str, b: &str, c: &str) -> String {
-    format!("vec3({}, {}, {})", a, b, c)
-}
-
-#[generate_builtin_fn("Vec4")]
-fn Vec4Constructor(x: f32, y: f32, z: f32, w: f32) -> Vec4 {
-    Vec4::new(x, y, z, w)
-}
-
-#[generate_glsl_impl_inline("Vec4Constructor")]
-fn generate(a: &str, b: &str, c: &str, d: &str) -> String {
-    format!("vec4({}, {}, {}, {})", a, b, c, d)
-}
+generate_matrix_ctor!(2, 2);
+generate_matrix_ctor!(2, 3);
+generate_matrix_ctor!(2, 4);
+generate_matrix_ctor!(3, 2);
+generate_matrix_ctor!(3, 3);
+generate_matrix_ctor!(3, 4);
+generate_matrix_ctor!(4, 2);
+generate_matrix_ctor!(4, 3);
+generate_matrix_ctor!(4, 4);
 
 #[generate_builtin_fn("__op_unary_neg")]
 fn UnNegFloat(a: f32) -> f32 {

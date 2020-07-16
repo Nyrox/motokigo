@@ -1,8 +1,11 @@
-use proc_macro::TokenStream;
+use proc_macro::{TokenStream, TokenTree};
 use quote::quote;
 use quote::ToTokens;
-use syn::Ident;
-use syn::{Attribute, AttributeArgs, DeriveInput, ItemFn};
+use syn::*;
+use syn::parse::*;
+use syn::punctuated::*;
+use syn::ext::*;
+use itertools::Itertools;
 
 #[proc_macro_attribute]
 pub fn generate_glsl_impl_inline(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -15,7 +18,7 @@ pub fn generate_glsl_impl_inline(attr: TokenStream, item: TokenStream) -> TokenS
         syn::NestedMeta::Lit(syn::Lit::Str(name)) => name.value(),
         _ => panic!("Expected first and only macro argument to be a string."),
     };
-    println!("{:?}", opts);
+    //println!("{:?}", opts);
     if struct_name.contains("{}") {
         /*let replacement = match &opts[1] {
             syn::NestedMeta::Lit(syn::Lit::Verbatim(name)) => name.to_string(),
@@ -138,6 +141,106 @@ pub fn generate_builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream 
 
                 vm.push_stack(rv);
             }
+        }
+    })
+    .into()
+}
+
+#[derive(Debug)]
+struct Decl {
+    ident: Ident,
+    paren_token: token::Paren,
+    args: Punctuated<Ident, Token![,]>,
+}
+
+impl Parse for Decl {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        Ok(Self {
+            ident: input.parse()?,
+            paren_token: parenthesized!(content in input),
+            args: content.parse_terminated(IdentExt::parse_any)?,
+        })
+    }
+}
+
+#[proc_macro]
+pub fn generate_vector_ctor(item: TokenStream) -> TokenStream {
+    let parsed = syn::parse_macro_input!(item as Decl);
+    let args = parsed.args;
+
+    let args_typed_f32 = args.iter().map(|x| quote!{#x: f32});
+    let args_typed_str = args.iter().map(|x| quote!{#x: &str});
+    
+    let name = parsed.ident.to_string();
+    let name_ident = parsed.ident;
+    let name_lower = name.to_lowercase();
+    
+    let fmt_string = (0..args.len() - 1).fold("{}".to_string(), |acc, _| acc + ", {}");
+    let fmt_string = format!("{}({})", name_lower, fmt_string);
+    let impl_string = format!("{}Constructor", name);
+    let impl_ident = Ident::new(&impl_string, proc_macro::Span::call_site().into());
+
+    (quote! {
+        #[generate_builtin_fn(#name)]
+        fn #impl_ident(#(#args_typed_f32),*) -> #name_ident {
+            #name_ident::new(#args)
+        }
+        
+        #[generate_glsl_impl_inline(#impl_string)]
+        fn generate(#(#args_typed_str),*) -> String {
+            format!(#fmt_string, #args)
+        }
+    })
+    .into()
+}
+
+#[proc_macro]
+pub fn generate_matrix_ctor(item: TokenStream) -> TokenStream {
+    let parsed = item
+        .into_iter()
+        .filter_map(|x| match x {
+            TokenTree::Literal(l) => Some(l.to_string().parse::<usize>().unwrap()),
+            _ => None
+        })
+        .collect::<Vec<_>>();
+    let (m, n) = (parsed[0], parsed[1]);
+
+    let args_packed = (0..n*m).map(|x| {
+        let ident = Ident::new(&format!("m{}", x), proc_macro::Span::call_site().into());
+        (quote!{#ident}, quote!{#ident: f32}, quote!{#ident: &str})
+    });
+    let args = args_packed.clone().map(|x| x.0);
+    let args_typed_f32 = args_packed.clone().map(|x| x.1);
+    let args_typed_str = args_packed.clone().map(|x| x.2);
+
+    let name = if n == m {
+        format!("Mat{}", n)
+    } else {
+        format!("Mat{}x{}", m, n)
+    };
+    let name_ident = Ident::new(&name, proc_macro::Span::call_site().into());
+    let name_lower = name.to_lowercase();
+    
+    let fmt_string = (0..n*m-1).fold("{}".to_string(), |acc, _| acc + ", {}");
+    let fmt_string = format!("{}({})", name_lower, fmt_string);
+    let impl_string = format!("{}Constructor", name);
+    let impl_ident = Ident::new(&impl_string, proc_macro::Span::call_site().into());
+
+    let chunks = args.clone().chunks(n);
+    let rows_arr = (&chunks).into_iter().map(|x| quote!{ [ #(#x),* ] });
+
+    (quote! {
+        #[generate_builtin_fn(#name)]
+        fn #impl_ident(#(#args_typed_f32),*) -> #name_ident {
+            Matrix::new([
+                #(#rows_arr),*
+            ])
+        }
+        
+        #[generate_glsl_impl_inline(#impl_string)]
+        fn generate(#(#args_typed_str),*) -> String {
+            format!(#fmt_string, #(#args),*)
         }
     })
     .into()

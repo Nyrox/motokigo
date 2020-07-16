@@ -4,10 +4,6 @@ use std::fmt::{Debug, Formatter, Result};
 use std::ops::{Add, Div, Mul, Sub};
 use num_traits::*;
 
-const fn mul(n: usize, m: usize) -> usize {
-    n * m
-}
-
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Matrix<T: Scalar, const M: usize, const N: usize> {
@@ -39,6 +35,10 @@ unsafe impl<T: 'static + Scalar, const M: usize, const N: usize> bytemuck::Pod f
 unsafe impl<T: Scalar, const M: usize, const N: usize> bytemuck::Zeroable for Matrix<T, M, N> {}
 
 impl<T: Scalar, const M: usize, const N: usize> Matrix<T, M, N> {
+    pub fn new(arr: [[T; N]; M]) -> Self {
+        Self { rows: arr }
+    }
+
     pub fn get_elem(self, row: usize, col: usize) -> T {
         self.rows[row][col]
     }
@@ -84,7 +84,7 @@ impl<T: Scalar, const M: usize, const N: usize> PartialEq<Self> for Matrix<T, M,
     fn eq(&self, other: &Self) -> bool {
         for i in 0..M {
             for j in 0..N {
-                if (self.rows[i][j] != other.rows[i][j]) {
+                if self.rows[i][j] != other.rows[i][j] {
                     return false;
                 }
             }
@@ -102,9 +102,17 @@ impl<T: Scalar, const M: usize, const N: usize> BuiltInType for Matrix<T, M, N> 
     }
 }
 
-mod tests {
-    use super::*;
+pub type Mat2   = Matrix<f32, 2, 2>;
+pub type Mat3   = Matrix<f32, 3, 3>;
+pub type Mat4   = Matrix<f32, 4, 4>;
+pub type Mat2x3 = Matrix<f32, 2, 3>;
+pub type Mat2x4 = Matrix<f32, 2, 4>;
+pub type Mat3x2 = Matrix<f32, 3, 2>;
+pub type Mat3x4 = Matrix<f32, 3, 4>;
+pub type Mat4x2 = Matrix<f32, 4, 2>;
+pub type Mat4x3 = Matrix<f32, 4, 3>;
 
+mod tests {
     #[test]
     fn test1() {
         let lhs = Matrix {

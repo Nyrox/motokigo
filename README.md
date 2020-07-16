@@ -6,6 +6,12 @@ Motoki is yet another programming language targeted at programming GPUs, aiming 
   
 Motoki does not aim to revolutionize the way shaders are written, instead providing a simple language that should be familiar to graphic programmers and only improving on existing languages where those improvements do not pose a barrier to entry.
 
+## Building
+
+1. Clone the repo, cd into it
+2. If you do not have cargo-script installed: `cargo install script`
+3. Run `cargo script regen_globals.rs`
+4. Run `cargo build`
 
 ## Features
 

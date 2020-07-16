@@ -35,6 +35,16 @@ macro_rules! implement_vec_op {
                 format!("{} * {}", a, b)
             }
 
+            #[generate_builtin_fn("__op_binary_div")]
+            fn [<BinDiv $name Float>](v: $name, a: $t) -> $name {
+                v / a
+            }
+
+            #[generate_glsl_impl_inline("BinDiv{}Float", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} / {}", a, b)
+            }
+
             #[generate_builtin_fn("__op_binary_add")]
             fn [<BinAdd $name $name>](a: $name, b: $name) -> $name {
                 a + b
@@ -43,6 +53,16 @@ macro_rules! implement_vec_op {
             #[generate_glsl_impl_inline("BinAdd{}{}", $name)]
             fn generate(a: &str, b: &str) -> String {
                 format!("{} + {}", a, b)
+            }
+
+            #[generate_builtin_fn("__op_binary_sub")]
+            fn [<BinSub $name $name>](a: $name, b: $name) -> $name {
+                a - b
+            }
+
+            #[generate_glsl_impl_inline("BinSub{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} - {}", a, b)
             }
 
             #[generate_builtin_fn("normalize")]

@@ -138,6 +138,7 @@ pub enum TypeKind {
     F32,
     TypeRef(String),
     Vector(Box<TypeKind>, usize),
+    Matrix(Box<TypeKind>, usize, usize),
 }
 
 impl TypeKind {
@@ -147,6 +148,7 @@ impl TypeKind {
             TypeKind::I32 => 4,
             TypeKind::F32 => 4,
             TypeKind::Vector(typeKind, size) => typeKind.size() * size,
+            TypeKind::Matrix(typeKind, m, n) => typeKind.size() * m * n,
             _ => unimplemented!("{:?}", self),
         }
     }

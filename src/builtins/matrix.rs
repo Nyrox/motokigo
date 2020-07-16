@@ -103,10 +103,10 @@ impl<T: Scalar, const M: usize, const N: usize> PartialEq<Self> for Matrix<T, M,
 
 impl<T: Scalar, const M: usize, const N: usize> BuiltInType for Matrix<T, M, N> {
     fn stack_size() -> usize {
-        std::mem::size_of::<T>()
+        std::mem::size_of::<T>() * M * N
     }
     fn type_kind() -> TypeKind {
-        TypeKind::Vector(Box::new(T::type_kind()), N)
+        TypeKind::Matrix(Box::new(T::type_kind()), M, N)
     }
 }
 

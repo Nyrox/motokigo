@@ -49,20 +49,25 @@ impl<'a> ResolveTypes<'a> {
 impl<'a> Visitor for ResolveTypes<'a> {
     fn type_kind(&mut self, tk: &mut TypeKind) -> VResult {
         match tk {
-            TypeKind::TypeRef(name) => match name.as_str() {
-                "Vec2" => {
-                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 2);
-                    Ok(())
-                },
-                "Vec3" => {
-                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 3);
-                    Ok(())
-                },
-                "Vec4" => {
-                    *tk = TypeKind::Vector(Box::new(TypeKind::F32), 4);
-                    Ok(())
-                },
-                _ => Ok(()),
+            TypeKind::TypeRef(name) => {
+                if name.starts_with("Vec") {
+                    if let Some(n) = name.chars().nth(3).and_then(|x| x.to_digit(10)) {
+                        *tk = TypeKind::Vector(Box::new(TypeKind::F32), n as usize);
+                    }            
+                }
+                else if name.starts_with("Mat") {
+                    let m = name.chars().nth(3).and_then(|x| x.to_digit(10));
+                    let n = name.chars().nth(5).and_then(|x| x.to_digit(10));
+                    if let Some(m) = m {
+                        if let Some(n) = n {
+                            *tk = TypeKind::Matrix(Box::new(TypeKind::F32), m as usize, n as usize);
+                        }
+                        else {
+                            *tk = TypeKind::Matrix(Box::new(TypeKind::F32), m as usize, m as usize);
+                        }
+                    }
+                }
+                Ok(())
             },
             _ => Ok(()),
         }

@@ -166,7 +166,7 @@ pub type Vec2 = Vector<f32, 2>;
 
 impl<T: Scalar, const N: usize> BuiltInType for Vector<T, N> {
     fn stack_size() -> usize {
-        std::mem::size_of::<T>()
+        std::mem::size_of::<T>() * N
     }
     fn type_kind() -> TypeKind {
         TypeKind::Vector(Box::new(T::type_kind()), N)

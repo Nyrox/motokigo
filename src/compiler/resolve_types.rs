@@ -67,6 +67,9 @@ impl<'a> Visitor for ResolveTypes<'a> {
                         }
                     }
                 }
+                else if name == "Float" {
+                    *tk = TypeKind::F32;
+                }
                 Ok(())
             },
             _ => Ok(()),

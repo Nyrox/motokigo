@@ -4,12 +4,12 @@ use crate::scanner::*;
 use std::iter::Iterator;
 use std::iter::Peekable;
 
-pub fn parse(input: impl AsRef<str>) -> Program {
-    let tokens = Scanner::new(input.as_ref().chars()).scan_all().unwrap();
+pub fn parse(input: impl AsRef<str>) -> Result<Program, ParsingError> {
+    let tokens = Scanner::new(input.as_ref().chars()).scan_all()?;
 
     let mut tokens = tokens.into_iter().peekable();
 
-    parse_program(&mut tokens).unwrap()
+    parse_program(&mut tokens)
 }
 
 type ItemType = Spanned<Token>;
@@ -18,7 +18,15 @@ type ItemType = Spanned<Token>;
 pub enum ParsingError {
     UnexpectedToken(ItemType),
     UnexpectedEndOfInput,
+    ScanningError(ScanningError),
 }
+
+impl From<ScanningError> for ParsingError {
+    fn from(e: ScanningError) -> ParsingError {
+        ParsingError::ScanningError(e)
+    }
+}
+
 
 type ParsingResult<T> = Result<T, ParsingError>;
 
@@ -233,7 +241,7 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
             let rhs = parse_expr_bp(lexer, r_bp)?;
             let fnc = match t {
                 Token::Minus => "__op_unary_neg",
-                _ => unreachable!(),
+                _ => unreachable!(), // at this point we know we have a valid unary operator, so this is fine
             };
 
             Expr::FuncCall((

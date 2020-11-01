@@ -175,9 +175,6 @@ impl<I: Iterator<Item = char>> Scanner<I> {
         loop {
             match self.peek() {
                 Some(c) if c.is_alphanumeric() || c == '_' => ident.push(self.advance().unwrap()),
-                None => {
-                    return Err(ScanningError::UnexpectedEndOfFile);
-                }
                 _ => {
                     break;
                 }

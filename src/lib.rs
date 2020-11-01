@@ -16,14 +16,18 @@ mod tests {
 	#[test]
 	pub fn test_everything() {
 		let programs = [
-			"./examples/basic.mk",
+			"basic.mk",
 		];
 
 		for p in programs.iter() {
-			let file = std::fs::read_to_string(p).unwrap();
-			let program = parser::parse(file);
-			let program = compiler::compile(program);
+			let file = std::fs::read_to_string(format!("./examples/{}", p)).unwrap();
+			let mut program = parser::parse(file);
+			compiler::resolve_types::resolve(&mut program, &mut compiler::program_data::ProgramData::new()).unwrap();
 
+			compiler::compile(program.clone());
+			let glsl = glsl::generate_glsl(program);
+
+			std::fs::write(format!("./debug/{}", p), glsl).unwrap();
 		}
 	}
 }

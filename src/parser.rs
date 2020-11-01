@@ -46,7 +46,14 @@ pub trait TokenSource {
             Token::Identifier(s) => Ok(Spanned::new(s, token.from, token.to)),
             _ => Err(ParsingError::UnexpectedToken(token)),
         }
-    }
+	}
+
+	fn maybe_expect(&mut self, token: Token) -> Option<ItemType> {
+		match TokenSource::peek(self)? {
+			t if t.item == token => Some(self.expect_next().unwrap()),
+			_ => None
+		}
+	}
 }
 
 impl<T> TokenSource for Peekable<T>
@@ -157,7 +164,19 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
                     token.map(|_| ()),
                     parse_expr_bp(tokens, 0)?,
                 ));
-            }
+			}
+			Token::Let => {
+				let is_mut = tokens.maybe_expect(Token::Mut).is_some();
+				let ident = tokens.expect_identifier()?;
+
+				tokens.expect_token(Token::Equals)?;
+
+                output.push(Statement::VariableDeclaration(
+					is_mut,
+                    ident,
+                    parse_expr_bp(tokens, 0)?,
+                ));
+			}
             Token::Identifier(s) => {
                 tokens.expect_token(Token::Equals)?;
 

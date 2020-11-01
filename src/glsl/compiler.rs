@@ -80,7 +80,7 @@ impl GenerateGLSL {
 
     pub fn generate_statements(&mut self, statements: &Vec<Statement>) -> String {
         let func_body = statements.iter().map(|s| match s {
-            Statement::Assignment(id, expr) => {
+            Statement::VariableDeclaration(_, id, expr) => {
                 let glsl_type = get_glsl_type(&expr.get_type().unwrap());
                 format!(
                     "\t{} {} = {};",
@@ -88,7 +88,14 @@ impl GenerateGLSL {
                     id.item,
                     self.generate_expr(expr)
                 )
-            }
+			}
+			Statement::Assignment(id, expr) => {
+				format!(
+					"\t{} = {};",
+					id.item,
+					self.generate_expr(expr)
+				)
+			}
             Statement::Return(_, expr) => format!("\treturn {};", self.generate_expr(expr)),
         });
 

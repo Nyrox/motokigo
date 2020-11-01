@@ -28,7 +28,8 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             SymbolMeta {
                 stack_offset: Some(static_section),
                 type_kind: i.type_kind.clone().item,
-                is_static: true,
+				is_static: true,
+				is_mutable: false,
             },
         );
 
@@ -46,7 +47,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
 
         for s in f.statements.iter() {
             match s {
-                Statement::Assignment(i, expr) => {
+                Statement::VariableDeclaration(_, i, expr) => {
                     generate_expr(&mut program, &ast, &func_meta, &expr);
 
                     if let Some(o) = data.global_symbols.get(&i.item) {
@@ -67,7 +68,29 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
                         OpCode::StmtMarker,
                         i.from.line as u16,
                     ));
-                }
+				}
+				Statement::Assignment(i, expr) => {
+					generate_expr(&mut program, &ast, &func_meta, &expr);
+
+                    if let Some(o) = data.global_symbols.get(&i.item) {
+                        program.code.push(MemoryCell::with_data(
+                            OpCode::Mov4Global,
+                            o.stack_offset.unwrap() as u16,
+                        ));
+                    } else {
+                        func_meta
+                            .symbols
+                            .get_mut(i.item.as_str())
+                            .unwrap()
+                            .stack_offset = Some(stack_offset);
+                        stack_offset += expr.get_type().unwrap().size();
+                    }
+
+                    program.code.push(MemoryCell::with_data(
+                        OpCode::StmtMarker,
+                        i.from.line as u16,
+                    ));
+				}
                 Statement::Return(span, expr) => {
                     generate_expr(&mut program, &ast, &func_meta, &expr);
 

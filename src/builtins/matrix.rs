@@ -121,6 +121,8 @@ pub type Mat4x2 = Matrix<f32, 4, 2>;
 pub type Mat4x3 = Matrix<f32, 4, 3>;
 
 mod tests {
+	use super::*;
+
     #[test]
     fn test1() {
         let lhs = Matrix {
@@ -147,7 +149,7 @@ mod tests {
                 [36, 15, 28, 34]
             ]
         };
-        
+
         assert_eq!(lhs * rhs, result);
     }
 }

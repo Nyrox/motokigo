@@ -19,7 +19,9 @@ impl<'a> ResolveTypes<'a> {
 #[derive(Clone, Debug)]
 pub enum TypeError {
     UnknownSymbol(Spanned<Ident>),
-    UnknownFunction(Spanned<Ident>, Vec<TypeKind>),
+	UnknownFunction(Spanned<Ident>, Vec<TypeKind>),
+	AssignmentToImmutable(Spanned<Ident>),
+	TypeError(Spanned<Ident>, TypeKind, TypeKind),
 }
 
 use std::error;
@@ -53,7 +55,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                 if name.starts_with("Vec") {
                     if let Some(n) = name.chars().nth(3).and_then(|x| x.to_digit(10)) {
                         *tk = TypeKind::Vector(Box::new(TypeKind::F32), n as usize);
-                    }            
+                    }
                 }
                 else if name.starts_with("Mat") {
                     let m = name.chars().nth(3).and_then(|x| x.to_digit(10));
@@ -69,7 +71,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                 }
                 else if name == "Float" {
                     *tk = TypeKind::F32;
-                }
+				}
                 Ok(())
             },
             _ => Ok(()),
@@ -101,7 +103,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
 
     fn post_statement(&mut self, stmt: &mut Statement) -> VResult {
         match stmt {
-            Statement::Assignment(ident, rhs) => {
+            Statement::VariableDeclaration(is_mut, ident, rhs) => {
                 let scope = self.current_scope();
 
                 scope.symbols.insert(
@@ -111,11 +113,28 @@ impl<'a> Visitor for ResolveTypes<'a> {
                             "Expected expr {:#?} to be typed by this point.",
                             rhs
                         )),
-                        is_static: false,
+						is_static: false,
+						is_mutable: *is_mut,
                         stack_offset: None,
                     },
                 );
-            }
+			}
+			Statement::Assignment(ident, rhs) =>  {
+				let scope = self.current_scope();
+
+				if let Some(s) = scope.symbols.get(&ident.item) {
+					if !s.is_mutable {
+						Err(Box::new(TypeError::AssignmentToImmutable(ident.clone())))?;
+					}
+
+					let rhs_t = rhs.get_type().expect(&format!("Expected expr {:#?} to be typed by this point.", rhs));
+					if s.type_kind != rhs_t {
+						Err(Box::new(TypeError::TypeError(ident.clone(), s.type_kind.clone(), rhs_t)))?;
+					}
+				} else {
+					Err(Box::new(TypeError::UnknownSymbol(ident.clone())))?;
+				}
+			}
             Statement::Return(_, _) => {}
         }
 
@@ -149,7 +168,8 @@ impl<'a> Visitor for ResolveTypes<'a> {
             SymbolMeta {
                 type_kind: param.type_kind.item.clone(),
                 stack_offset: None,
-                is_static: true,
+				is_static: true,
+				is_mutable: false,
             },
         );
 

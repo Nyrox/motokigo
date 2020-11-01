@@ -6,7 +6,8 @@ use std::collections::HashMap;
 pub struct SymbolMeta {
     pub type_kind: TypeKind,
     pub stack_offset: Option<usize>,
-    pub is_static: bool,
+	pub is_static: bool,
+	pub is_mutable: bool,
 }
 
 #[derive(Clone, Debug)]

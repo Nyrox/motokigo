@@ -218,14 +218,16 @@ impl Visitable for Expr {
 
 #[derive(Clone, Debug)]
 pub enum Statement {
-    Assignment(Spanned<Ident>, Expr),
+	Assignment(Spanned<Ident>, Expr),
+	VariableDeclaration(bool, Spanned<Ident>, Expr),
     Return(Spanned<()>, Expr),
 }
 
 impl Visitable for Statement {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
         match self {
-            Statement::Assignment(_, expr) => expr.visit(v)?,
+			Statement::Assignment(_, expr) => expr.visit(v)?,
+			Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,
             Statement::Return(_, expr) => expr.visit(v)?,
         }
 

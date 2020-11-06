@@ -19,9 +19,11 @@ mod tests {
 			"basic.mk",
 		];
 
+		std::fs::create_dir("./debug").ok();
+
 		for p in programs.iter() {
 			let file = std::fs::read_to_string(format!("./examples/{}", p)).unwrap();
-			let mut program = parser::parse(file);
+			let mut program = parser::parse(file).unwrap();
 			compiler::resolve_types::resolve(&mut program, &mut compiler::program_data::ProgramData::new()).unwrap();
 
 			compiler::compile(program.clone());

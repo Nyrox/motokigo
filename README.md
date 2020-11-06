@@ -29,11 +29,11 @@ This is what the language looks like currently. Everything open to change.
 in Vec3 normal
 
 Vec3 main() {
-    L = normalize(Vec3(-0.5, 1.0, -1.0))
-    C = Vec3(1.0, 0.5, 0.5)
+    let L = normalize(Vec3(-0.5, 1.0, -1.0))
+    let C = Vec3(1.0, 0.5, 0.5)
     
-    cos_a = dot(L, normal)
-    ambient = 0.3
+    let cos_a = dot(L, normal)
+    let ambient = 0.3
 
     return cos_a * C + ambient * C
 }

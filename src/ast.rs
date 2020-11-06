@@ -187,7 +187,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn get_type(&self) -> Option<TypeKind> {
+    pub fn typekind(&self) -> Option<TypeKind> {
         match self {
             Expr::FuncCall((def, _)) => def.resolved.clone().map(|(_, tk)| tk),
             Expr::Symbol(s) => s.resolved.clone().map(|(_, tk)| tk),
@@ -195,6 +195,18 @@ impl Expr {
                 Literal::DecimalLiteral(_) => Some(TypeKind::F32),
                 Literal::IntegerLiteral(_) => Some(TypeKind::I32),
             },
+        }
+    }
+
+    pub fn expect_typekind(&self) -> TypeKind {
+        self.typekind().expect(&format!("Expected expr {:#?} to be typed by this point.", self))
+    }
+
+    pub fn span(&self) -> Spanned<()> {
+        match self {
+            Self::FuncCall(fc) => fc.0.raw.map(|x| ()),
+            Self::Literal(lit) => lit.map(|x| ()),
+            Self::Symbol(sym) => sym.raw.map(|x| ()),
         }
     }
 }
@@ -221,6 +233,7 @@ pub enum Statement {
 	Assignment(Spanned<Ident>, Expr),
 	VariableDeclaration(bool, Spanned<Ident>, Expr),
     Return(Spanned<()>, Expr),
+    Conditional(Conditional),
 }
 
 impl Visitable for Statement {
@@ -229,9 +242,30 @@ impl Visitable for Statement {
 			Statement::Assignment(_, expr) => expr.visit(v)?,
 			Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,
             Statement::Return(_, expr) => expr.visit(v)?,
+            Statement::Conditional(cond) => cond.visit(v)?,
         }
 
         v.post_statement(self)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Conditional {
+    pub cond: Option<Expr>,
+    pub body: Vec<Statement>,
+    pub alternate: Option<Box<Conditional>>
+}
+
+impl Visitable for Conditional {
+    fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
+        if let Some(cond) = &mut self.cond {
+            cond.visit(v)?;
+        }
+        self.body.visit(v)?;
+        if let Some(alt) = self.alternate.as_mut() {
+            alt.visit(v)?;
+        }
+        Ok(())
     }
 }
 

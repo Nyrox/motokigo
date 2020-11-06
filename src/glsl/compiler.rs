@@ -6,6 +6,7 @@ pub struct GenerateGLSL {
     pub functions: Vec<(String, String)>,
     pub current_fn: Option<String>,
     pub prelude: String,
+    pub indent: usize
 }
 impl GenerateGLSL {
     pub fn new() -> Self {
@@ -13,6 +14,7 @@ impl GenerateGLSL {
             functions: vec![],
             current_fn: None,
             prelude: String::new(),
+            indent: 0
         }
     }
 
@@ -79,11 +81,13 @@ impl GenerateGLSL {
     }
 
     pub fn generate_statements(&mut self, statements: &Vec<Statement>) -> String {
+        self.add_indent();
         let func_body = statements.iter().map(|s| match s {
             Statement::VariableDeclaration(_, id, expr) => {
-                let glsl_type = get_glsl_type(&expr.get_type().unwrap());
+                let glsl_type = get_glsl_type(&expr.typekind().unwrap());
                 format!(
-                    "\t{} {} = {};",
+                    "{}{} {} = {};",
+                    self.indent_string(),
                     glsl_type,
                     id.item,
                     self.generate_expr(expr)
@@ -91,15 +95,40 @@ impl GenerateGLSL {
 			}
 			Statement::Assignment(id, expr) => {
 				format!(
-					"\t{} = {};",
+                    "{}{} = {};",
+                    self.indent_string(),
 					id.item,
 					self.generate_expr(expr)
 				)
 			}
-            Statement::Return(_, expr) => format!("\treturn {};", self.generate_expr(expr)),
-        });
+            Statement::Return(_, expr) => format!("{}return {};", self.indent_string(), self.generate_expr(expr)),
+            Statement::Conditional(conditional) => {
+                fn generate_conditional(this: &mut GenerateGLSL, c: &Conditional) -> String {
+                    let mut result = String::new();
+                    let stmts = this.generate_statements(&c.body);
 
-        func_body.collect::<Vec<String>>().join("\n")
+                    if let Some(cond) = &c.cond {
+                        let expr = this.generate_expr(&cond);
+                        result.extend(format!("if ({}) {{\n{}\n{}}}", 
+                            expr, stmts, this.indent_string()).chars());
+
+                        if let Some(next) = &c.alternate {
+                            result.extend(" else ".chars());
+                            result.extend(generate_conditional(this, next.as_ref()).chars());
+                        }
+                    } else {
+                        result.extend(format!("{{\n{}\n{}}}", stmts, this.indent_string()).chars());
+                    }
+
+                    result
+                }
+
+                format!("{}{}", self.indent_string(), generate_conditional(self, conditional))
+            }
+        }).collect::<Vec<String>>().join("\n");
+        self.rem_indent();
+
+        func_body
     }
 
     pub fn generate_expr(&mut self, expr: &Expr) -> String {
@@ -108,7 +137,7 @@ impl GenerateGLSL {
             Expr::FuncCall((f, args)) => {
                 let arg_types = args
                     .iter()
-                    .map(|e| e.get_type().unwrap())
+                    .map(|e| e.typekind().unwrap())
                     .collect::<Vec<_>>();
 
                 let args: Vec<_> = args.iter().map(|e| self.generate_expr(e)).collect();
@@ -123,5 +152,17 @@ impl GenerateGLSL {
             }
             Expr::Literal(l) => l.to_string(),
         }
+    }
+
+    pub fn add_indent(&mut self) {
+        self.indent += 1;
+    }
+
+    pub fn rem_indent(&mut self) {
+        self.indent -= 1;
+    }
+
+    pub fn indent_string(&self) -> String {
+        (0..self.indent).map(|_| "\t").collect()
     }
 }

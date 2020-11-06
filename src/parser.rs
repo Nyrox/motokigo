@@ -193,6 +193,9 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
                     parse_expr_bp(tokens, 0)?,
                 ));
             }
+            Token::If => {
+                output.push(Statement::Conditional(parse_conditional(tokens)?));
+            },
             Token::RightBrace => break 'parsing,
             _ => {
                 return Err(ParsingError::UnexpectedToken(token));
@@ -201,6 +204,33 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
     }
 
     Ok(output)
+}
+
+pub fn parse_conditional(tokens: &mut impl TokenSource) -> ParsingResult<Conditional> {
+    // cond
+    tokens.expect_token(Token::LeftParen)?;
+    let cond = parse_expr_bp(tokens, 0)?;
+    tokens.expect_token(Token::RightParen)?;
+
+    // body
+    tokens.expect_token(Token::LeftBrace)?;
+    let body = parse_statements(tokens)?;
+
+    // recurse
+    let alt = if tokens.maybe_expect(Token::Else).is_some() {
+        
+        if let Some(_) = tokens.maybe_expect(Token::If) { // else if
+            Some(parse_conditional(tokens)?)
+        } else { // else
+            tokens.expect_token(Token::LeftBrace)?;
+            let last_body = parse_statements(tokens)?;
+            Some(Conditional { cond: None, body: last_body, alternate: None })
+        }
+    } else {
+        None
+    };
+
+    Ok(Conditional { cond: Some(cond), body, alternate: alt.map(Box::new) })
 }
 
 pub fn infix_binding_power(t: &Token) -> Option<(u8, u8)> {

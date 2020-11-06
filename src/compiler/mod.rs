@@ -61,7 +61,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
                             .get_mut(i.item.as_str())
                             .unwrap()
                             .stack_offset = Some(stack_offset);
-                        stack_offset += expr.get_type().unwrap().size();
+                        stack_offset += expr.typekind().unwrap().size();
                     }
 
                     program.code.push(MemoryCell::with_data(
@@ -83,7 +83,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
                             .get_mut(i.item.as_str())
                             .unwrap()
                             .stack_offset = Some(stack_offset);
-                        stack_offset += expr.get_type().unwrap().size();
+                        stack_offset += expr.typekind().unwrap().size();
                     }
 
                     program.code.push(MemoryCell::with_data(
@@ -103,6 +103,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
                         .push(MemoryCell::with_data(OpCode::Ret, stack_offset as u16));
                     has_return = true;
                 }
+                Statement::Conditional(_) => unimplemented!()
             };
         }
         if !has_return {
@@ -128,7 +129,7 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 
             let arg_types = &args
                 .iter()
-                .map(|e| e.get_type().unwrap())
+                .map(|e| e.typekind().unwrap())
                 .collect::<Vec<_>>();
 
             if let Some((func, _)) = crate::builtins::get_builtin_fn(id.raw.as_ref(), arg_types) {

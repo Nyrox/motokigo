@@ -109,7 +109,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                 scope.symbols.insert(
                     ident.item.clone(),
                     SymbolMeta {
-                        type_kind: rhs.get_type().expect(&format!(
+                        type_kind: rhs.typekind().expect(&format!(
                             "Expected expr {:#?} to be typed by this point.",
                             rhs
                         )),
@@ -127,7 +127,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
 						Err(Box::new(TypeError::AssignmentToImmutable(ident.clone())))?;
 					}
 
-					let rhs_t = rhs.get_type().expect(&format!("Expected expr {:#?} to be typed by this point.", rhs));
+					let rhs_t = rhs.expect_typekind();
 					if s.type_kind != rhs_t {
 						Err(Box::new(TypeError::TypeError(ident.clone(), s.type_kind.clone(), rhs_t)))?;
 					}
@@ -136,6 +136,13 @@ impl<'a> Visitor for ResolveTypes<'a> {
 				}
 			}
             Statement::Return(_, _) => {}
+            Statement::Conditional(conditional) => { 
+                let c = conditional.cond.as_ref().unwrap();
+                match c.expect_typekind() {
+                    TypeKind::I32 | TypeKind::F32 => {},
+                    t => { Err(Box::new(TypeError::TypeError(c.span().map(|_| String::from("ur bad")), TypeKind::F32, t)))?; }
+                }
+            }
         }
 
         Ok(())
@@ -145,7 +152,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
         let arg_types = func
             .1
             .iter()
-            .map(|e| e.get_type().unwrap())
+            .map(|e| e.typekind().unwrap())
             .collect::<Vec<_>>();
 
         if let Some((_, builtin)) = crate::builtins::get_builtin_fn(func.0.raw.as_ref(), &arg_types)

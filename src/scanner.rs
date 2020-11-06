@@ -5,7 +5,9 @@ pub enum Token {
     Out,
     In,
 	Let,
-	Mut,
+    Mut,
+    If,
+    Else,
 
     Float,
     LeftParen,
@@ -103,7 +105,9 @@ impl<I: Iterator<Item = char>> Scanner<I> {
             "in" => Some(Token::In),
 			"return" => Some(Token::Return),
 			"let" => Some(Token::Let),
-			"mut" => Some(Token::Mut),
+            "mut" => Some(Token::Mut),
+            "if" => Some(Token::If),
+            "else" => Some(Token::Else),
             _ => None,
         }
     }

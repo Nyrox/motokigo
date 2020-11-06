@@ -26,7 +26,7 @@ mod tests {
 			let mut program = parser::parse(file).unwrap();
 			compiler::resolve_types::resolve(&mut program, &mut compiler::program_data::ProgramData::new()).unwrap();
 
-			compiler::compile(program.clone());
+			//compiler::compile(program.clone());
 			let glsl = glsl::generate_glsl(program);
 
 			std::fs::write(format!("./debug/{}", p), glsl).unwrap();

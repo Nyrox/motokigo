@@ -6,7 +6,13 @@ Vec3 main() {
     let C = Vec3(1.0, 0.5, 0.5)
 
     let cos_a = dot(L, normal)
-    let ambient = 0.3
+
+    let mut ambient = 0.0
+
+	if (1.0) {
+		ambient = 1.0
+	}
+
 
     return cos_a * C + ambient * C
 }

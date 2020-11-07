@@ -4,7 +4,7 @@ use crate::ast::{Position, Spanned};
 pub enum Token {
     Out,
     In,
-	Let,
+    Let,
     Mut,
     If,
     Else,
@@ -103,8 +103,8 @@ impl<I: Iterator<Item = char>> Scanner<I> {
         match what.to_owned().to_lowercase().as_str() {
             "out" => Some(Token::Out),
             "in" => Some(Token::In),
-			"return" => Some(Token::Return),
-			"let" => Some(Token::Let),
+            "return" => Some(Token::Return),
+            "let" => Some(Token::Let),
             "mut" => Some(Token::Mut),
             "if" => Some(Token::If),
             "else" => Some(Token::Else),

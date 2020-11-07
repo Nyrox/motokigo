@@ -28,8 +28,8 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             SymbolMeta {
                 stack_offset: Some(static_section),
                 type_kind: i.type_kind.clone().item,
-				is_static: true,
-				is_mutable: false,
+                is_static: true,
+                is_mutable: false,
             },
         );
 
@@ -39,78 +39,18 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
     program.data = data.clone();
 
     for f in ast.functions.iter() {
-        let func_meta = data.functions.get_mut(f.ident.item.as_str()).unwrap();
-        func_meta.address = Some(program.code.len());
-
-        let mut has_return = false;
-        let mut stack_offset = 0;
+        let mut fnc = data.functions.get_mut(f.ident.item.as_str()).unwrap();
+        fnc.address = Some(program.code.len());
 
         for s in f.statements.iter() {
-            match s {
-                Statement::VariableDeclaration(_, i, expr) => {
-                    generate_expr(&mut program, &ast, &func_meta, &expr);
-
-                    if let Some(o) = data.global_symbols.get(&i.item) {
-                        program.code.push(MemoryCell::with_data(
-                            OpCode::Mov4Global,
-                            o.stack_offset.unwrap() as u16,
-                        ));
-                    } else {
-                        func_meta
-                            .symbols
-                            .get_mut(i.item.as_str())
-                            .unwrap()
-                            .stack_offset = Some(stack_offset);
-                        stack_offset += expr.typekind().unwrap().size();
-                    }
-
-                    program.code.push(MemoryCell::with_data(
-                        OpCode::StmtMarker,
-                        i.from.line as u16,
-                    ));
-				}
-				Statement::Assignment(i, expr) => {
-					generate_expr(&mut program, &ast, &func_meta, &expr);
-
-                    if let Some(o) = data.global_symbols.get(&i.item) {
-                        program.code.push(MemoryCell::with_data(
-                            OpCode::Mov4Global,
-                            o.stack_offset.unwrap() as u16,
-                        ));
-                    } else {
-                        func_meta
-                            .symbols
-                            .get_mut(i.item.as_str())
-                            .unwrap()
-                            .stack_offset = Some(stack_offset);
-                        stack_offset += expr.typekind().unwrap().size();
-                    }
-
-                    program.code.push(MemoryCell::with_data(
-                        OpCode::StmtMarker,
-                        i.from.line as u16,
-                    ));
-				}
-                Statement::Return(span, expr) => {
-                    generate_expr(&mut program, &ast, &func_meta, &expr);
-
-                    program.code.push(MemoryCell::with_data(
-                        OpCode::StmtMarker,
-                        span.from.line as u16,
-                    ));
-                    program
-                        .code
-                        .push(MemoryCell::with_data(OpCode::Ret, stack_offset as u16));
-                    has_return = true;
-                }
-                Statement::Conditional(_) => unimplemented!()
-            };
+            generate_statement(&mut program, &ast, &mut fnc, s);
         }
-        if !has_return {
+
+        if !fnc.has_return {
             program.code.push(MemoryCell::plain_inst(OpCode::Void));
             program
                 .code
-                .push(MemoryCell::with_data(OpCode::Ret, stack_offset as u16));
+                .push(MemoryCell::with_data(OpCode::Ret, fnc.stack_offset as u16));
         }
     }
 
@@ -118,6 +58,93 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
     program.data.static_section_size = static_section;
     program.data.min_stack_size = static_section + 1024;
     program
+}
+
+pub fn generate_statement(
+    program: &mut VMProgram,
+    ast: &Program,
+    fnc: &mut FuncMeta,
+    statement: &Statement,
+) {
+    match statement {
+        Statement::VariableDeclaration(_, i, expr) => {
+            generate_expr(program, &ast, fnc, &expr);
+
+            if let Some(o) = program.data.global_symbols.get(&i.item) {
+                program.code.push(MemoryCell::with_data(
+                    OpCode::Mov4Global,
+                    o.stack_offset.unwrap() as u16,
+                ));
+            } else {
+                fnc.symbols.get_mut(i.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
+                fnc.stack_offset += expr.typekind().unwrap().size();
+            }
+
+            program.code.push(MemoryCell::with_data(
+                OpCode::StmtMarker,
+                i.from.line as u16,
+            ));
+        }
+        Statement::Assignment(i, expr) => {
+            generate_expr(program, &ast, fnc, &expr);
+
+            if let Some(o) = program.data.global_symbols.get(&i.item) {
+                program.code.push(MemoryCell::with_data(
+                    OpCode::Mov4Global,
+                    o.stack_offset.unwrap() as u16,
+                ));
+            } else {
+                fnc.symbols.get_mut(i.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
+                fnc.stack_offset += expr.typekind().unwrap().size();
+            }
+
+            program.code.push(MemoryCell::with_data(
+                OpCode::StmtMarker,
+                i.from.line as u16,
+            ));
+        }
+        Statement::Return(span, expr) => {
+            generate_expr(program, &ast, fnc, &expr);
+
+            program.code.push(MemoryCell::with_data(
+                OpCode::StmtMarker,
+                span.from.line as u16,
+            ));
+            program
+                .code
+                .push(MemoryCell::with_data(OpCode::Ret, fnc.stack_offset as u16));
+            fnc.has_return = true;
+        }
+        Statement::Conditional(cond) => {
+            fn generate_conditional_branch(
+                program: &mut VMProgram,
+                ast: &Program,
+                fnc: &mut FuncMeta,
+                cond: &Conditional,
+            ) {
+                if let Some(c) = &cond.cond {
+                    generate_expr(program, ast, fnc, &c);
+                    let label = program.code.len();
+                    program.code.push(MemoryCell::with_data(OpCode::CondJmp, 0));
+                    for s in cond.body.iter() {
+                        generate_statement(program, ast, fnc, s);
+                    }
+                    program.code[label] =
+                        MemoryCell::with_data(OpCode::CondJmp, program.code.len() as u16);
+                } else {
+                    for s in cond.body.iter() {
+                        generate_statement(program, ast, fnc, s);
+                    }
+                }
+
+                if let Some(c) = &cond.alternate {
+                    generate_conditional_branch(program, ast, fnc, &c);
+                }
+            }
+
+            generate_conditional_branch(program, ast, fnc, &cond);
+        }
+    };
 }
 
 pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, expr: &Expr) {

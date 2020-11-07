@@ -1,13 +1,13 @@
-use crate::builtins::{Scalar, BuiltInType, Vector};
 use crate::ast::TypeKind;
+use crate::builtins::{BuiltInType, Scalar, Vector};
+use num_traits::*;
 use std::fmt::{Debug, Formatter, Result};
 use std::ops::{Add, Div, Mul, Sub};
-use num_traits::*;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Matrix<T: Scalar, const M: usize, const N: usize> {
-    pub rows: [[T; N]; M]
+    pub rows: [[T; N]; M],
 }
 
 impl<T: Scalar, const M: usize, const N: usize> Default for Matrix<T, M, N> {
@@ -21,10 +21,7 @@ impl<T: Scalar + Debug, const M: usize, const N: usize> Debug for Matrix<T, M, N
         formatter.write_str("Matrix [");
         for r in self.rows.iter() {
             formatter.write_str("\n\t");
-            formatter
-                .debug_list()
-                .entries(r.iter())
-                .finish()?;
+            formatter.debug_list().entries(r.iter()).finish()?;
         }
         formatter.write_str("\n]");
         Ok(())
@@ -74,7 +71,9 @@ impl<T: Scalar, const M: usize, const N: usize> Matrix<T, M, N> {
     }
 }
 
-impl<T: Scalar, const M: usize, const N: usize, const R: usize> Mul<Matrix<T, N, R>> for Matrix<T, M, N> {
+impl<T: Scalar, const M: usize, const N: usize, const R: usize> Mul<Matrix<T, N, R>>
+    for Matrix<T, M, N>
+{
     type Output = Matrix<T, M, R>;
 
     fn mul(self, other: Matrix<T, N, R>) -> Self::Output {
@@ -110,9 +109,9 @@ impl<T: Scalar, const M: usize, const N: usize> BuiltInType for Matrix<T, M, N> 
     }
 }
 
-pub type Mat2   = Matrix<f32, 2, 2>;
-pub type Mat3   = Matrix<f32, 3, 3>;
-pub type Mat4   = Matrix<f32, 4, 4>;
+pub type Mat2 = Matrix<f32, 2, 2>;
+pub type Mat3 = Matrix<f32, 3, 3>;
+pub type Mat4 = Matrix<f32, 4, 4>;
 pub type Mat2x3 = Matrix<f32, 2, 3>;
 pub type Mat2x4 = Matrix<f32, 2, 4>;
 pub type Mat3x2 = Matrix<f32, 3, 2>;
@@ -121,33 +120,20 @@ pub type Mat4x2 = Matrix<f32, 4, 2>;
 pub type Mat4x3 = Matrix<f32, 4, 3>;
 
 mod tests {
-	use super::*;
+    use super::*;
 
     #[test]
     fn test1() {
         let lhs = Matrix {
-            rows: [
-                [1, 2, 3, 4],
-                [3, 4, 2, 5],
-                [4, 3, 2, 1]
-            ]
+            rows: [[1, 2, 3, 4], [3, 4, 2, 5], [4, 3, 2, 1]],
         };
 
         let rhs = Matrix {
-            rows: [
-                [5, 1, 2, 3],
-                [4, 2, 3, 4],
-                [1, 2, 3, 4],
-                [2, 1, 5, 2]
-            ]
+            rows: [[5, 1, 2, 3], [4, 2, 3, 4], [1, 2, 3, 4], [2, 1, 5, 2]],
         };
 
         let result = Matrix {
-            rows: [
-                [24, 15, 37, 31],
-                [43, 20, 49, 43],
-                [36, 15, 28, 34]
-            ]
+            rows: [[24, 15, 37, 31], [43, 20, 49, 43], [36, 15, 28, 34]],
         };
 
         assert_eq!(lhs * rhs, result);

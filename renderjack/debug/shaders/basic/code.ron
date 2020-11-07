@@ -112,10 +112,49 @@ VMProgram {
             ConstF32,
             0,
         ),
-        MemoryCell,
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            CondJmp,
+            33,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
         MemoryCell(
             StmtMarker,
-            9,
+            11,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            CondJmp,
+            39,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            StmtMarker,
+            14,
         ),
         MemoryCell(
             Load4,
@@ -139,7 +178,7 @@ VMProgram {
         ),
         MemoryCell(
             Load4,
-            28,
+            32,
         ),
         MemoryCell(
             Load4,
@@ -163,11 +202,11 @@ VMProgram {
         ),
         MemoryCell(
             StmtMarker,
-            11,
+            18,
         ),
         MemoryCell(
             Ret,
-            32,
+            36,
         ),
     ],
     data: ProgramData {
@@ -196,14 +235,6 @@ VMProgram {
                         is_static: false,
                         is_mutable: false,
                     },
-                    "ambient": SymbolMeta {
-                        type_kind: F32,
-                        stack_offset: Some(
-                            28,
-                        ),
-                        is_static: false,
-                        is_mutable: false,
-                    },
                     "cos_a": SymbolMeta {
                         type_kind: F32,
                         stack_offset: Some(
@@ -212,10 +243,20 @@ VMProgram {
                         is_static: false,
                         is_mutable: false,
                     },
+                    "ambient": SymbolMeta {
+                        type_kind: F32,
+                        stack_offset: Some(
+                            32,
+                        ),
+                        is_static: false,
+                        is_mutable: true,
+                    },
                 },
                 address: Some(
                     0,
                 ),
+                stack_offset: 36,
+                has_return: true,
             },
         },
         global_symbols: {

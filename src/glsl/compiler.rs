@@ -6,7 +6,7 @@ pub struct GenerateGLSL {
     pub functions: Vec<(String, String)>,
     pub current_fn: Option<String>,
     pub prelude: String,
-    pub indent: usize
+    pub indent: usize,
 }
 impl GenerateGLSL {
     pub fn new() -> Self {
@@ -14,7 +14,7 @@ impl GenerateGLSL {
             functions: vec![],
             current_fn: None,
             prelude: String::new(),
-            indent: 0
+            indent: 0,
         }
     }
 
@@ -32,6 +32,8 @@ impl GenerateGLSL {
 
 impl GenerateGLSL {
     pub fn consume(&mut self, program: Program) {
+        self.prelude.push_str("#version 330 core\n\n");
+
         for i in program.in_parameters.iter() {
             self.consume_in_parameter(i);
         }
@@ -82,50 +84,69 @@ impl GenerateGLSL {
 
     pub fn generate_statements(&mut self, statements: &Vec<Statement>) -> String {
         self.add_indent();
-        let func_body = statements.iter().map(|s| match s {
-            Statement::VariableDeclaration(_, id, expr) => {
-                let glsl_type = get_glsl_type(&expr.typekind().unwrap());
-                format!(
-                    "{}{} {} = {};",
-                    self.indent_string(),
-                    glsl_type,
-                    id.item,
-                    self.generate_expr(expr)
-                )
-			}
-			Statement::Assignment(id, expr) => {
-				format!(
+        let func_body = statements
+            .iter()
+            .map(|s| match s {
+                Statement::VariableDeclaration(_, id, expr) => {
+                    let glsl_type = get_glsl_type(&expr.typekind().unwrap());
+                    format!(
+                        "{}{} {} = {};",
+                        self.indent_string(),
+                        glsl_type,
+                        id.item,
+                        self.generate_expr(expr)
+                    )
+                }
+                Statement::Assignment(id, expr) => format!(
                     "{}{} = {};",
                     self.indent_string(),
-					id.item,
-					self.generate_expr(expr)
-				)
-			}
-            Statement::Return(_, expr) => format!("{}return {};", self.indent_string(), self.generate_expr(expr)),
-            Statement::Conditional(conditional) => {
-                fn generate_conditional(this: &mut GenerateGLSL, c: &Conditional) -> String {
-                    let mut result = String::new();
-                    let stmts = this.generate_statements(&c.body);
+                    id.item,
+                    self.generate_expr(expr)
+                ),
+                Statement::Return(_, expr) => format!(
+                    "{}return {};",
+                    self.indent_string(),
+                    self.generate_expr(expr)
+                ),
+                Statement::Conditional(conditional) => {
+                    fn generate_conditional(this: &mut GenerateGLSL, c: &Conditional) -> String {
+                        let mut result = String::new();
+                        let stmts = this.generate_statements(&c.body);
 
-                    if let Some(cond) = &c.cond {
-                        let expr = this.generate_expr(&cond);
-                        result.extend(format!("if ({}) {{\n{}\n{}}}", 
-                            expr, stmts, this.indent_string()).chars());
+                        if let Some(cond) = &c.cond {
+                            let expr = this.generate_expr(&cond);
+                            result.extend(
+                                format!(
+                                    "if (bool({})) {{\n{}\n{}}}",
+                                    expr,
+                                    stmts,
+                                    this.indent_string()
+                                )
+                                .chars(),
+                            );
 
-                        if let Some(next) = &c.alternate {
-                            result.extend(" else ".chars());
-                            result.extend(generate_conditional(this, next.as_ref()).chars());
+                            if let Some(next) = &c.alternate {
+                                result.extend(" else ".chars());
+                                result.extend(generate_conditional(this, next.as_ref()).chars());
+                            }
+                        } else {
+                            result.extend(
+                                format!("{{\n{}\n{}}}", stmts, this.indent_string()).chars(),
+                            );
                         }
-                    } else {
-                        result.extend(format!("{{\n{}\n{}}}", stmts, this.indent_string()).chars());
+
+                        result
                     }
 
-                    result
+                    format!(
+                        "{}{}",
+                        self.indent_string(),
+                        generate_conditional(self, conditional)
+                    )
                 }
-
-                format!("{}{}", self.indent_string(), generate_conditional(self, conditional))
-            }
-        }).collect::<Vec<String>>().join("\n");
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
         self.rem_indent();
 
         func_body

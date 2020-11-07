@@ -199,7 +199,10 @@ impl Expr {
     }
 
     pub fn expect_typekind(&self) -> TypeKind {
-        self.typekind().expect(&format!("Expected expr {:#?} to be typed by this point.", self))
+        self.typekind().expect(&format!(
+            "Expected expr {:#?} to be typed by this point.",
+            self
+        ))
     }
 
     pub fn span(&self) -> Spanned<()> {
@@ -230,8 +233,8 @@ impl Visitable for Expr {
 
 #[derive(Clone, Debug)]
 pub enum Statement {
-	Assignment(Spanned<Ident>, Expr),
-	VariableDeclaration(bool, Spanned<Ident>, Expr),
+    Assignment(Spanned<Ident>, Expr),
+    VariableDeclaration(bool, Spanned<Ident>, Expr),
     Return(Spanned<()>, Expr),
     Conditional(Conditional),
 }
@@ -239,8 +242,8 @@ pub enum Statement {
 impl Visitable for Statement {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
         match self {
-			Statement::Assignment(_, expr) => expr.visit(v)?,
-			Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,
+            Statement::Assignment(_, expr) => expr.visit(v)?,
+            Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,
             Statement::Return(_, expr) => expr.visit(v)?,
             Statement::Conditional(cond) => cond.visit(v)?,
         }
@@ -253,7 +256,7 @@ impl Visitable for Statement {
 pub struct Conditional {
     pub cond: Option<Expr>,
     pub body: Vec<Statement>,
-    pub alternate: Option<Box<Conditional>>
+    pub alternate: Option<Box<Conditional>>,
 }
 
 impl Visitable for Conditional {

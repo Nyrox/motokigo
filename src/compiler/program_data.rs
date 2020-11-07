@@ -6,14 +6,16 @@ use std::collections::HashMap;
 pub struct SymbolMeta {
     pub type_kind: TypeKind,
     pub stack_offset: Option<usize>,
-	pub is_static: bool,
-	pub is_mutable: bool,
+    pub is_static: bool,
+    pub is_mutable: bool,
 }
 
 #[derive(Clone, Debug)]
 pub struct FuncMeta {
     pub symbols: HashMap<String, SymbolMeta>,
     pub address: Option<usize>,
+    pub stack_offset: usize,
+    pub has_return: bool,
 }
 
 impl FuncMeta {
@@ -21,6 +23,8 @@ impl FuncMeta {
         FuncMeta {
             symbols: HashMap::new(),
             address: None,
+            stack_offset: 0,
+            has_return: false,
         }
     }
 }

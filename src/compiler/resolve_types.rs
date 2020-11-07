@@ -19,9 +19,9 @@ impl<'a> ResolveTypes<'a> {
 #[derive(Clone, Debug)]
 pub enum TypeError {
     UnknownSymbol(Spanned<Ident>),
-	UnknownFunction(Spanned<Ident>, Vec<TypeKind>),
-	AssignmentToImmutable(Spanned<Ident>),
-	TypeError(Spanned<Ident>, TypeKind, TypeKind),
+    UnknownFunction(Spanned<Ident>, Vec<TypeKind>),
+    AssignmentToImmutable(Spanned<Ident>),
+    TypeError(Spanned<Ident>, TypeKind, TypeKind),
 }
 
 use std::error;
@@ -56,24 +56,21 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     if let Some(n) = name.chars().nth(3).and_then(|x| x.to_digit(10)) {
                         *tk = TypeKind::Vector(Box::new(TypeKind::F32), n as usize);
                     }
-                }
-                else if name.starts_with("Mat") {
+                } else if name.starts_with("Mat") {
                     let m = name.chars().nth(3).and_then(|x| x.to_digit(10));
                     let n = name.chars().nth(5).and_then(|x| x.to_digit(10));
                     if let Some(m) = m {
                         if let Some(n) = n {
                             *tk = TypeKind::Matrix(Box::new(TypeKind::F32), m as usize, n as usize);
-                        }
-                        else {
+                        } else {
                             *tk = TypeKind::Matrix(Box::new(TypeKind::F32), m as usize, m as usize);
                         }
                     }
-                }
-                else if name == "Float" {
+                } else if name == "Float" {
                     *tk = TypeKind::F32;
-				}
+                }
                 Ok(())
-            },
+            }
             _ => Ok(()),
         }
     }
@@ -113,34 +110,44 @@ impl<'a> Visitor for ResolveTypes<'a> {
                             "Expected expr {:#?} to be typed by this point.",
                             rhs
                         )),
-						is_static: false,
-						is_mutable: *is_mut,
+                        is_static: false,
+                        is_mutable: *is_mut,
                         stack_offset: None,
                     },
                 );
-			}
-			Statement::Assignment(ident, rhs) =>  {
-				let scope = self.current_scope();
+            }
+            Statement::Assignment(ident, rhs) => {
+                let scope = self.current_scope();
 
-				if let Some(s) = scope.symbols.get(&ident.item) {
-					if !s.is_mutable {
-						Err(Box::new(TypeError::AssignmentToImmutable(ident.clone())))?;
-					}
+                if let Some(s) = scope.symbols.get(&ident.item) {
+                    if !s.is_mutable {
+                        Err(Box::new(TypeError::AssignmentToImmutable(ident.clone())))?;
+                    }
 
-					let rhs_t = rhs.expect_typekind();
-					if s.type_kind != rhs_t {
-						Err(Box::new(TypeError::TypeError(ident.clone(), s.type_kind.clone(), rhs_t)))?;
-					}
-				} else {
-					Err(Box::new(TypeError::UnknownSymbol(ident.clone())))?;
-				}
-			}
+                    let rhs_t = rhs.expect_typekind();
+                    if s.type_kind != rhs_t {
+                        Err(Box::new(TypeError::TypeError(
+                            ident.clone(),
+                            s.type_kind.clone(),
+                            rhs_t,
+                        )))?;
+                    }
+                } else {
+                    Err(Box::new(TypeError::UnknownSymbol(ident.clone())))?;
+                }
+            }
             Statement::Return(_, _) => {}
-            Statement::Conditional(conditional) => { 
+            Statement::Conditional(conditional) => {
                 let c = conditional.cond.as_ref().unwrap();
                 match c.expect_typekind() {
-                    TypeKind::I32 | TypeKind::F32 => {},
-                    t => { Err(Box::new(TypeError::TypeError(c.span().map(|_| String::from("ur bad")), TypeKind::F32, t)))?; }
+                    TypeKind::I32 | TypeKind::F32 => {}
+                    t => {
+                        Err(Box::new(TypeError::TypeError(
+                            c.span().map(|_| String::from("ur bad")),
+                            TypeKind::F32,
+                            t,
+                        )))?;
+                    }
                 }
             }
         }
@@ -175,8 +182,8 @@ impl<'a> Visitor for ResolveTypes<'a> {
             SymbolMeta {
                 type_kind: param.type_kind.item.clone(),
                 stack_offset: None,
-				is_static: true,
-				is_mutable: false,
+                is_static: true,
+                is_mutable: false,
             },
         );
 

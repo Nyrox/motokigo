@@ -7,7 +7,6 @@ pub mod opengl;
 pub mod shader;
 pub mod transform;
 
-
 use motokigo::{
     compiler, parser,
     vm::{self, *},
@@ -23,9 +22,6 @@ use gl::types::*;
 use shader::Uniform;
 use std::ffi::CString;
 use std::time::*;
-
-
-
 
 fn edge(p: Vector2<f32>, v0: Vector2<f32>, v1: Vector2<f32>) -> f32 {
     (p.x - v0.x) * (v1.y - v0.y) - (p.y - v0.y) * (v1.x - v0.x)
@@ -117,7 +113,6 @@ where
         }
     }
 }
-
 
 impl Uniform for Matrix4<f32> {
     fn set(&self, id: &str, handle: GLuint) {
@@ -274,6 +269,28 @@ fn main() {
         buffer
     }
 
+    let shadelang_shader = {
+        let src = read_file_contents("res/shaders/shadelang/basic.sl");
+        std::fs::create_dir_all("debug/shaders/basic/").ok();
+
+        let program = parser::parse(&src).unwrap();
+        std::fs::write("debug/shaders/basic/ast.rson", format!("{:#?}", program)).ok();
+        {
+            let mut program = program.clone();
+            motokigo::compiler::resolve_types::resolve(
+                &mut program,
+                &mut motokigo::compiler::program_data::ProgramData::new(),
+            )
+            .unwrap();
+            let glsl = motokigo::glsl::generate_glsl(program.clone());
+            std::fs::write("debug/shaders/basic/compiled.glsl", glsl.clone()).ok();
+            std::fs::write("res/shaders/glsl/basic.fs", glsl).unwrap();
+        }
+        let compiled = compiler::compile(program);
+        std::fs::write("debug/shaders/basic/code.ron", format!("{:#?}", compiled)).ok();
+        compiled
+    };
+    let shadelang_vm = vm::VirtualMachine::new(&shadelang_shader);
     let shader = shader::Shader::new();
     shader
         .attach(
@@ -289,29 +306,6 @@ fn main() {
         .unwrap();
     shader.compile().unwrap();
     shader.bind();
-
-    let shadelang_shader = {
-        let src = read_file_contents("res/shaders/shadelang/basic.sl");
-        std::fs::create_dir_all("debug/shaders/basic/").ok();
-
-        let program = parser::parse(&src).unwrap();
-        std::fs::write("debug/shaders/basic/ast.rson", format!("{:#?}", program)).ok();
-        {
-            let mut program = program.clone();
-            motokigo::compiler::resolve_types::resolve(
-                &mut program,
-                &mut motokigo::compiler::program_data::ProgramData::new(),
-            )
-            .unwrap();
-            let glsl = motokigo::glsl::generate_glsl(program.clone());
-            std::fs::write("debug/shaders/basic/compiled.glsl", glsl).ok();
-        }
-        let compiled = compiler::compile(program);
-        std::fs::write("debug/shaders/basic/code.ron", format!("{:#?}", compiled)).ok();
-        compiled
-    };
-    let mut shadelang_vm = vm::VirtualMachine::new(&shadelang_shader);
-
     let viewport = Viewport {
         x: 0,
         y: 0,

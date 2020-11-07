@@ -27,7 +27,6 @@ impl From<ScanningError> for ParsingError {
     }
 }
 
-
 type ParsingResult<T> = Result<T, ParsingError>;
 
 pub trait TokenSource {
@@ -54,14 +53,14 @@ pub trait TokenSource {
             Token::Identifier(s) => Ok(Spanned::new(s, token.from, token.to)),
             _ => Err(ParsingError::UnexpectedToken(token)),
         }
-	}
+    }
 
-	fn maybe_expect(&mut self, token: Token) -> Option<ItemType> {
-		match TokenSource::peek(self)? {
-			t if t.item == token => Some(self.expect_next().unwrap()),
-			_ => None
-		}
-	}
+    fn maybe_expect(&mut self, token: Token) -> Option<ItemType> {
+        match TokenSource::peek(self)? {
+            t if t.item == token => Some(self.expect_next().unwrap()),
+            _ => None,
+        }
+    }
 }
 
 impl<T> TokenSource for Peekable<T>
@@ -172,19 +171,19 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
                     token.map(|_| ()),
                     parse_expr_bp(tokens, 0)?,
                 ));
-			}
-			Token::Let => {
-				let is_mut = tokens.maybe_expect(Token::Mut).is_some();
-				let ident = tokens.expect_identifier()?;
+            }
+            Token::Let => {
+                let is_mut = tokens.maybe_expect(Token::Mut).is_some();
+                let ident = tokens.expect_identifier()?;
 
-				tokens.expect_token(Token::Equals)?;
+                tokens.expect_token(Token::Equals)?;
 
                 output.push(Statement::VariableDeclaration(
-					is_mut,
+                    is_mut,
                     ident,
                     parse_expr_bp(tokens, 0)?,
                 ));
-			}
+            }
             Token::Identifier(s) => {
                 tokens.expect_token(Token::Equals)?;
 
@@ -195,7 +194,7 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
             }
             Token::If => {
                 output.push(Statement::Conditional(parse_conditional(tokens)?));
-            },
+            }
             Token::RightBrace => break 'parsing,
             _ => {
                 return Err(ParsingError::UnexpectedToken(token));
@@ -218,19 +217,28 @@ pub fn parse_conditional(tokens: &mut impl TokenSource) -> ParsingResult<Conditi
 
     // recurse
     let alt = if tokens.maybe_expect(Token::Else).is_some() {
-        
-        if let Some(_) = tokens.maybe_expect(Token::If) { // else if
+        if let Some(_) = tokens.maybe_expect(Token::If) {
+            // else if
             Some(parse_conditional(tokens)?)
-        } else { // else
+        } else {
+            // else
             tokens.expect_token(Token::LeftBrace)?;
             let last_body = parse_statements(tokens)?;
-            Some(Conditional { cond: None, body: last_body, alternate: None })
+            Some(Conditional {
+                cond: None,
+                body: last_body,
+                alternate: None,
+            })
         }
     } else {
         None
     };
 
-    Ok(Conditional { cond: Some(cond), body, alternate: alt.map(Box::new) })
+    Ok(Conditional {
+        cond: Some(cond),
+        body,
+        alternate: alt.map(Box::new),
+    })
 }
 
 pub fn infix_binding_power(t: &Token) -> Option<(u8, u8)> {

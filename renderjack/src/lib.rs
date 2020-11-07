@@ -1,7 +1,4 @@
-use cgmath::prelude::*;
-use cgmath::{Vector3, Vector2};
-
-
+use cgmath::{Vector2, Vector3};
 
 fn edge(p: Vector2<f32>, v0: Vector2<f32>, v1: Vector2<f32>) -> f32 {
     (p.x - v0.x) * (v1.y - v0.y) - (p.y - v0.y) * (v1.x - v0.x)

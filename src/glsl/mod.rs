@@ -11,11 +11,13 @@ fn get_glsl_type(tk: &TypeKind) -> String {
     match tk {
         TypeKind::F32 => "float".to_owned(),
         TypeKind::Vector(_, size) => format!("vec{}", size),
-        TypeKind::Matrix(_, m, n) => if m == n {
-            format!("mat{}", m)
-        } else {
-            format!("mat{}x{}", m, n)
-        },
+        TypeKind::Matrix(_, m, n) => {
+            if m == n {
+                format!("mat{}", m)
+            } else {
+                format!("mat{}x{}", m, n)
+            }
+        }
         TypeKind::Void => "void".to_owned(),
         t => {
             dbg!(t);

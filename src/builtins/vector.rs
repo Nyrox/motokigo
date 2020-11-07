@@ -1,8 +1,8 @@
-use crate::builtins::{Scalar, BuiltInType, Matrix};
 use crate::ast::TypeKind;
+use crate::builtins::{BuiltInType, Matrix, Scalar};
+use num_traits::*;
 use std::fmt::{Debug, Formatter, Result};
 use std::ops::{Add, Div, Mul, Sub};
-use num_traits::*;
 
 #[repr(C)]
 #[derive(Clone, Copy)]

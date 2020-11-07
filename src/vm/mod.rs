@@ -18,12 +18,11 @@ pub enum OpCode {
     Load4,
     Mov4Global,
     Load4Global,
+    CondJmp,
 
     Ret,
     Call,
     CallBuiltIn,
-    Jmp,
-    JmpIf,
 
     StmtMarker,
     LenPlaceholder,

@@ -234,54 +234,146 @@ Program {
                         ),
                     ),
                 ),
-                VariableDeclaration(
-                    false,
-                    Spanned {
-                        item: "ambient",
-                        from: Position {
-                            line: 9,
-                            offset: Some(
-                                8,
+                Conditional(
+                    Conditional {
+                        cond: Some(
+                            Literal(
+                                Spanned {
+                                    item: DecimalLiteral(
+                                        1.0,
+                                    ),
+                                    from: Position {
+                                        line: 10,
+                                        offset: Some(
+                                            5,
+                                        ),
+                                    },
+                                    to: Position {
+                                        line: 10,
+                                        offset: Some(
+                                            8,
+                                        ),
+                                    },
+                                },
                             ),
-                        },
-                        to: Position {
-                            line: 9,
-                            offset: Some(
-                                15,
+                        ),
+                        body: [
+                            VariableDeclaration(
+                                true,
+                                Spanned {
+                                    item: "ambient",
+                                    from: Position {
+                                        line: 11,
+                                        offset: Some(
+                                            13,
+                                        ),
+                                    },
+                                    to: Position {
+                                        line: 11,
+                                        offset: Some(
+                                            20,
+                                        ),
+                                    },
+                                },
+                                Literal(
+                                    Spanned {
+                                        item: DecimalLiteral(
+                                            0.0,
+                                        ),
+                                        from: Position {
+                                            line: 11,
+                                            offset: Some(
+                                                23,
+                                            ),
+                                        },
+                                        to: Position {
+                                            line: 11,
+                                            offset: Some(
+                                                26,
+                                            ),
+                                        },
+                                    },
+                                ),
                             ),
-                        },
+                        ],
+                        alternate: None,
                     },
-                    Literal(
-                        Spanned {
-                            item: DecimalLiteral(
-                                0.3,
+                ),
+                Conditional(
+                    Conditional {
+                        cond: Some(
+                            Literal(
+                                Spanned {
+                                    item: DecimalLiteral(
+                                        1.0,
+                                    ),
+                                    from: Position {
+                                        line: 13,
+                                        offset: Some(
+                                            5,
+                                        ),
+                                    },
+                                    to: Position {
+                                        line: 13,
+                                        offset: Some(
+                                            8,
+                                        ),
+                                    },
+                                },
                             ),
-                            from: Position {
-                                line: 9,
-                                offset: Some(
-                                    18,
+                        ),
+                        body: [
+                            Assignment(
+                                Spanned {
+                                    item: "ambient",
+                                    from: Position {
+                                        line: 14,
+                                        offset: Some(
+                                            2,
+                                        ),
+                                    },
+                                    to: Position {
+                                        line: 14,
+                                        offset: Some(
+                                            9,
+                                        ),
+                                    },
+                                },
+                                Literal(
+                                    Spanned {
+                                        item: DecimalLiteral(
+                                            1.0,
+                                        ),
+                                        from: Position {
+                                            line: 14,
+                                            offset: Some(
+                                                12,
+                                            ),
+                                        },
+                                        to: Position {
+                                            line: 14,
+                                            offset: Some(
+                                                15,
+                                            ),
+                                        },
+                                    },
                                 ),
-                            },
-                            to: Position {
-                                line: 9,
-                                offset: Some(
-                                    21,
-                                ),
-                            },
-                        },
-                    ),
+                            ),
+                        ],
+                        alternate: None,
+                    },
                 ),
                 Return(
                     Spanned {
                         item: (),
                         from: Position {
-                            line: 11,
+                            line: 18,
                             offset: Some(
                                 4,
                             ),
                         },
                         to: Position {
-                            line: 11,
+                            line: 18,
                             offset: Some(
                                 10,
                             ),
@@ -289,30 +381,30 @@ Program {
                     },
                     FuncCall(
                         (
-                            Spanned { item: "__op_binary_add", from: Position { line: 11, offset: Some(21) }, to: Position { line: 11, offset: Some(22) } },
+                            Spanned { item: "__op_binary_add", from: Position { line: 18, offset: Some(21) }, to: Position { line: 18, offset: Some(22) } },
                             [
                                 FuncCall(
                                     (
-                                        Spanned { item: "__op_binary_mul", from: Position { line: 11, offset: Some(17) }, to: Position { line: 11, offset: Some(18) } },
+                                        Spanned { item: "__op_binary_mul", from: Position { line: 18, offset: Some(17) }, to: Position { line: 18, offset: Some(18) } },
                                         [
                                             Symbol(
-                                                Spanned { item: "cos_a", from: Position { line: 11, offset: Some(11) }, to: Position { line: 11, offset: Some(16) } },
+                                                Spanned { item: "cos_a", from: Position { line: 18, offset: Some(11) }, to: Position { line: 18, offset: Some(16) } },
                                             ),
                                             Symbol(
-                                                Spanned { item: "C", from: Position { line: 11, offset: Some(19) }, to: Position { line: 11, offset: Some(20) } },
+                                                Spanned { item: "C", from: Position { line: 18, offset: Some(19) }, to: Position { line: 18, offset: Some(20) } },
                                             ),
                                         ],
                                     ),
                                 ),
                                 FuncCall(
                                     (
-                                        Spanned { item: "__op_binary_mul", from: Position { line: 11, offset: Some(31) }, to: Position { line: 11, offset: Some(32) } },
+                                        Spanned { item: "__op_binary_mul", from: Position { line: 18, offset: Some(31) }, to: Position { line: 18, offset: Some(32) } },
                                         [
                                             Symbol(
-                                                Spanned { item: "ambient", from: Position { line: 11, offset: Some(23) }, to: Position { line: 11, offset: Some(30) } },
+                                                Spanned { item: "ambient", from: Position { line: 18, offset: Some(23) }, to: Position { line: 18, offset: Some(30) } },
                                             ),
                                             Symbol(
-                                                Spanned { item: "C", from: Position { line: 11, offset: Some(33) }, to: Position { line: 11, offset: Some(34) } },
+                                                Spanned { item: "C", from: Position { line: 18, offset: Some(33) }, to: Position { line: 18, offset: Some(34) } },
                                             ),
                                         ],
                                     ),

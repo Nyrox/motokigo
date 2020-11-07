@@ -2,10 +2,7 @@ use crate::ast::TypeKind;
 use crate::builtins::*;
 use crate::vm::VirtualMachine;
 use builtins::{
-    generate_builtin_fn, 
-    generate_glsl_impl_inline, 
-    generate_vector_ctor,
-    generate_matrix_ctor
+    generate_builtin_fn, generate_glsl_impl_inline, generate_matrix_ctor, generate_vector_ctor,
 };
 
 use crate::glsl::compiler::GenerateGLSL;

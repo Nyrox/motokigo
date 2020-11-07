@@ -123,6 +123,12 @@ impl<'a> VirtualMachine<'a> {
                     self.stack_base = self.stack.len();
                     self.isp = p as usize;
                 }
+                OpCode::CondJmp => {
+                    let cond: u32 = unsafe { self.pop_stack() };
+                    if cond == 0u32 {
+                        self.isp = p as usize;
+                    }
+                }
                 OpCode::CallBuiltIn => {
                     crate::builtins::call_builtin_fn(p as usize, &mut self);
                 }

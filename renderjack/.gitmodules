@@ -1,0 +1,3 @@
+[submodule "motokigo"]
+	path = motokigo
+	url = https://github.com/Nyrox/motokigo

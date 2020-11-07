@@ -1,0 +1,237 @@
+VMProgram {
+    code: [
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16128,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            42,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            42,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            22,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            12,
+        ),
+        MemoryCell(
+            StmtMarker,
+            5,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16256,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16128,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell(
+            ConstF32,
+            16128,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            22,
+        ),
+        MemoryCell(
+            StmtMarker,
+            6,
+        ),
+        MemoryCell(
+            Load4,
+            0,
+        ),
+        MemoryCell(
+            Load4,
+            4,
+        ),
+        MemoryCell(
+            Load4,
+            8,
+        ),
+        MemoryCell(
+            Load4Global,
+            0,
+        ),
+        MemoryCell(
+            Load4Global,
+            4,
+        ),
+        MemoryCell(
+            Load4Global,
+            8,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            13,
+        ),
+        MemoryCell(
+            StmtMarker,
+            8,
+        ),
+        MemoryCell(
+            ConstF32,
+            0,
+        ),
+        MemoryCell,
+        MemoryCell(
+            StmtMarker,
+            9,
+        ),
+        MemoryCell(
+            Load4,
+            24,
+        ),
+        MemoryCell(
+            Load4,
+            12,
+        ),
+        MemoryCell(
+            Load4,
+            16,
+        ),
+        MemoryCell(
+            Load4,
+            20,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            8,
+        ),
+        MemoryCell(
+            Load4,
+            28,
+        ),
+        MemoryCell(
+            Load4,
+            12,
+        ),
+        MemoryCell(
+            Load4,
+            16,
+        ),
+        MemoryCell(
+            Load4,
+            20,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            8,
+        ),
+        MemoryCell(
+            CallBuiltIn,
+            10,
+        ),
+        MemoryCell(
+            StmtMarker,
+            11,
+        ),
+        MemoryCell(
+            Ret,
+            32,
+        ),
+    ],
+    data: ProgramData {
+        functions: {
+            "main": FuncMeta {
+                symbols: {
+                    "L": SymbolMeta {
+                        type_kind: Vector(
+                            F32,
+                            3,
+                        ),
+                        stack_offset: Some(
+                            0,
+                        ),
+                        is_static: false,
+                        is_mutable: false,
+                    },
+                    "C": SymbolMeta {
+                        type_kind: Vector(
+                            F32,
+                            3,
+                        ),
+                        stack_offset: Some(
+                            12,
+                        ),
+                        is_static: false,
+                        is_mutable: false,
+                    },
+                    "ambient": SymbolMeta {
+                        type_kind: F32,
+                        stack_offset: Some(
+                            28,
+                        ),
+                        is_static: false,
+                        is_mutable: false,
+                    },
+                    "cos_a": SymbolMeta {
+                        type_kind: F32,
+                        stack_offset: Some(
+                            24,
+                        ),
+                        is_static: false,
+                        is_mutable: false,
+                    },
+                },
+                address: Some(
+                    0,
+                ),
+            },
+        },
+        global_symbols: {
+            "normal": SymbolMeta {
+                type_kind: Vector(
+                    F32,
+                    3,
+                ),
+                stack_offset: Some(
+                    0,
+                ),
+                is_static: true,
+                is_mutable: false,
+            },
+        },
+        min_stack_size: 1036,
+        static_section_size: 12,
+    },
+}

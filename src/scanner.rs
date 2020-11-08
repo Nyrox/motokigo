@@ -11,6 +11,7 @@ pub enum Token {
     For,
     To,
 
+    Int,
     Float,
     LeftParen,
     RightParen,

@@ -24,6 +24,10 @@ pub enum Token {
     Minus,
     Star,
     Slash,
+    Less,
+    LessEq,
+    Greater,
+    GreaterEq,
 
     Void,
     Return,

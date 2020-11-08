@@ -339,6 +339,11 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
             Token::Minus => "__op_binary_sub",
             Token::Star => "__op_binary_mul",
             Token::Slash => "__op_binary_div",
+            Token::Less => "__op_binary_less",
+            Token::LessEq => "__op_binary_less_equal",
+            Token::Greater => "__op_binary_greater",
+            Token::GreaterEq => "__op_binary_greater_equal",
+            Token::EqualsEquals => "__op_binary_equality",
             _ => unreachable!(),
         };
 

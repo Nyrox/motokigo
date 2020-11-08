@@ -103,42 +103,122 @@ generate_matrix_ctor!(4, 2);
 generate_matrix_ctor!(4, 3);
 generate_matrix_ctor!(4, 4);
 
-#[generate_builtin_fn("__op_unary_neg")]
-fn UnNegFloat(a: f32) -> f32 {
-    -a
+macro_rules! implement_num_ops {
+    ( $name:ident, $t:ident ) => {
+        paste::item! {
+
+            // Add
+            #[generate_builtin_fn("__op_binary_add")]
+            fn [<BinAdd $name $name>](a: $t, b: $t) -> $t {
+                a + b
+            }
+
+            #[generate_glsl_impl_inline("BinAdd{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} + {}", a, b)
+            }
+
+            // Mul
+            #[generate_builtin_fn("__op_binary_mul")]
+            fn [<BinMul $name $name>](a: $t, b: $t) -> $t {
+                a * b
+            }
+
+            #[generate_glsl_impl_inline("BinMul{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} * {}", a, b)
+            }
+            
+            // Sub
+            #[generate_builtin_fn("__op_binary_sub")]
+            fn [<BinSub $name $name>](a: $t, b: $t) -> $t {
+                a - b
+            }
+
+            #[generate_glsl_impl_inline("BinSub{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} - {}", a, b)
+            }
+
+            // Div
+            #[generate_builtin_fn("__op_binary_div")]
+            fn [<BinDiv $name $name>](a: $t, b: $t) -> $t {
+                a / b
+            }
+
+            #[generate_glsl_impl_inline("BinDiv{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} / {}", a, b)
+            }
+
+            // Negation
+            #[generate_builtin_fn("__op_unary_neg")]
+            fn [<UnNeg $name>](a: $t) -> $t {
+                -a
+            }
+
+            #[generate_glsl_impl_inline("UnNeg{}", $name)]
+            fn generate(a: &str) -> String {
+                format!("-{}", a)
+            }
+        
+            // Less
+            #[generate_builtin_fn("__op_binary_less")]
+            fn [<BinLess $name $name>](a: $t, b: $t) -> $t {
+                if a < b { 1 as $t } else { 0 as $t }
+            }
+
+            #[generate_glsl_impl_inline("BinLess{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} < {}", a, b)
+            }
+
+            // Less equal
+            #[generate_builtin_fn("__op_binary_less_equal")]
+            fn [<BinLessEqual $name $name>](a: $t, b: $t) -> $t {
+                if a <= b { 1 as $t } else { 0 as $t }
+            }
+
+            #[generate_glsl_impl_inline("BinLessEqual{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} <= {}", a, b)
+            }
+
+            // Greater
+            #[generate_builtin_fn("__op_binary_greater")]
+            fn [<BinGreater $name $name>](a: $t, b: $t) -> $t {
+                if a > b { 1 as $t } else { 0 as $t }
+            }
+
+            #[generate_glsl_impl_inline("BinGreater{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} > {}", a, b)
+            }
+
+            // Greater equal
+            #[generate_builtin_fn("__op_binary_greater_equal")]
+            fn [<BinGreaterEqual $name $name>](a: $t, b: $t) -> $t {
+                if a >= b { 1 as $t } else { 0 as $t }
+            }
+
+            #[generate_glsl_impl_inline("BinGreaterEqual{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} >= {}", a, b)
+            }
+
+            // Equality
+            #[generate_builtin_fn("__op_binary_equality")]
+            fn [<BinEquality $name $name>](a: $t, b: $t) -> $t {
+                if a == b { 1 as $t } else { 0 as $t }
+            }
+
+            #[generate_glsl_impl_inline("BinEquality{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} == {}", a, b)
+            }
+        }
+    }
 }
 
-#[generate_glsl_impl_inline("UnNegFloat")]
-fn generate(a: &str) -> String {
-    format!("-{}", a)
-}
-
-#[generate_builtin_fn("__op_binary_less")]
-fn BinLessIntInt(a: i32, b: i32) -> i32 {
-    if a < b { 1 } else { 0 }
-}
-
-#[generate_glsl_impl_inline("BinLessIntInt")]
-fn generate(a: &str, b: &str) -> String {
-    format!("{} < {}", a, b)
-}
-
-#[generate_builtin_fn("__op_binary_add")]
-fn BinAddFloatFloat(a: f32, b: f32) -> f32 {
-    a + b
-}
-
-#[generate_glsl_impl_inline("BinAddFloatFloat")]
-fn generate(a: &str, b: &str) -> String {
-    format!("{} + {}", a, b)
-}
-
-#[generate_builtin_fn("__op_binary_add")]
-fn BinAddIntInt(a: i32, b: i32) -> i32 {
-    a + b
-}
-
-#[generate_glsl_impl_inline("BinAddIntInt")]
-fn generate(a: &str, b: &str) -> String {
-    format!("{} + {}", a, b)
-}
+implement_num_ops!(Float, f32);
+implement_num_ops!(Int, i32);

@@ -229,7 +229,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                     .code
                     .push(MemoryCell::raw(unsafe { std::mem::transmute(i as i32) }));
             }
-            _ => unimplemented!(),
         },
         Expr::Symbol(s) => {
             let symbol = {

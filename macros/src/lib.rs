@@ -1,9 +1,5 @@
-use itertools::Itertools;
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use syn::ext::*;
-use syn::parse::*;
-use syn::punctuated::*;
 use syn::*;
 
 #[proc_macro_attribute]

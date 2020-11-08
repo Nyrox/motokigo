@@ -84,7 +84,7 @@ impl<T: Scalar, const N: usize> Vector<T, N> {
         self.0.rows[0][n] = v;
     }
 
-    pub fn lengthSquared(self) -> T {
+    pub fn length_squared(self) -> T {
         let mut sum = Zero::zero();
         for i in 0..N {
             sum = sum + self.get_elem(i) * self.get_elem(i);
@@ -93,7 +93,7 @@ impl<T: Scalar, const N: usize> Vector<T, N> {
     }
 
     pub fn length(self) -> f32 {
-        self.lengthSquared().to_f32().unwrap().sqrt()
+        self.length_squared().to_f32().unwrap().sqrt()
     }
 
     pub fn dot(self, other: Self) -> T {

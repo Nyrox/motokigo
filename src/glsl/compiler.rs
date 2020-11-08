@@ -1,5 +1,4 @@
 use super::*;
-use crate::ast::*;
 
 #[derive(Debug)]
 pub struct GenerateGLSL {

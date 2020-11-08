@@ -147,8 +147,8 @@ impl TypeKind {
             TypeKind::Void => 0,
             TypeKind::I32 => 4,
             TypeKind::F32 => 4,
-            TypeKind::Vector(typeKind, size) => typeKind.size() * size,
-            TypeKind::Matrix(typeKind, m, n) => typeKind.size() * m * n,
+            TypeKind::Vector(type_kind, size) => type_kind.size() * size,
+            TypeKind::Matrix(type_kind, m, n) => type_kind.size() * m * n,
             _ => unimplemented!("{:?}", self),
         }
     }
@@ -207,9 +207,9 @@ impl Expr {
 
     pub fn span(&self) -> Spanned<()> {
         match self {
-            Self::FuncCall(fc) => fc.0.raw.map(|x| ()),
-            Self::Literal(lit) => lit.map(|x| ()),
-            Self::Symbol(sym) => sym.raw.map(|x| ()),
+            Self::FuncCall(fc) => fc.0.raw.map(|_| ()),
+            Self::Literal(lit) => lit.map(|_| ()),
+            Self::Symbol(sym) => sym.raw.map(|_| ()),
         }
     }
 }

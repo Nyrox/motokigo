@@ -1,4 +1,5 @@
 #![feature(const_generics)]
+#![allow(incomplete_features)]
 
 pub mod ast;
 pub mod builtins;
@@ -8,8 +9,9 @@ pub mod parser;
 pub mod scanner;
 pub mod vm;
 
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{compiler, parser, glsl};
 
     #[test]
     pub fn test_everything() {

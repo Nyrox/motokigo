@@ -1,5 +1,4 @@
 #![feature(debug_non_exhaustive)]
-#![feature(vec_drain_as_slice)]
 
 pub mod camera;
 pub mod mesh;

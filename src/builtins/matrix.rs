@@ -2,7 +2,7 @@ use crate::ast::TypeKind;
 use crate::builtins::{BuiltInType, Scalar, Vector};
 use num_traits::*;
 use std::fmt::{Debug, Formatter, Result};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::*;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -18,12 +18,12 @@ impl<T: Scalar, const M: usize, const N: usize> Default for Matrix<T, M, N> {
 
 impl<T: Scalar + Debug, const M: usize, const N: usize> Debug for Matrix<T, M, N> {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
-        formatter.write_str("Matrix [");
+        formatter.write_str("Matrix [")?;
         for r in self.rows.iter() {
-            formatter.write_str("\n\t");
+            formatter.write_str("\n\t")?;
             formatter.debug_list().entries(r.iter()).finish()?;
         }
-        formatter.write_str("\n]");
+        formatter.write_str("\n]")?;
         Ok(())
     }
 }
@@ -119,6 +119,7 @@ pub type Mat3x4 = Matrix<f32, 3, 4>;
 pub type Mat4x2 = Matrix<f32, 4, 2>;
 pub type Mat4x3 = Matrix<f32, 4, 3>;
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

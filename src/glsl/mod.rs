@@ -27,7 +27,7 @@ fn get_glsl_type(tk: &TypeKind) -> String {
     }
 }
 
-pub fn generate_glsl(mut program: Program) -> String {
+pub fn generate_glsl(program: Program) -> String {
     let mut generator = GenerateGLSL::new();
     generator.consume(program);
     generator.finish()

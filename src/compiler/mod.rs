@@ -73,7 +73,6 @@ pub fn generate_statement(
             if let Some(_) = program.data.global_symbols.get(&i.item) {
                 panic!("Don't redeclare a global");
             } else {
-				program.code.push(MemoryCell::with_data(OpCode::Mov4, fnc.stack_offset as u16));
                 fnc.symbols.get_mut(i.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
                 fnc.stack_offset += expr.typekind().unwrap().size();
             }
@@ -87,15 +86,26 @@ pub fn generate_statement(
             generate_expr(program, &ast, fnc, &expr);
 
             if let Some(o) = program.data.global_symbols.get(&i.item) {
-                program.code.push(MemoryCell::with_data(
-                    OpCode::Mov4Global,
-                    o.stack_offset.unwrap() as u16,
-                ));
+				let size = o.type_kind.size() / 4;
+
+				for i in 1..=size {
+					program.code.push(MemoryCell::with_data(
+						OpCode::Mov4Global,
+						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+					));
+				}
             } else if let Some(o) = fnc.symbols.get(&i.item) {
-                program.code.push(MemoryCell::with_data(OpCode::Mov4, o.stack_offset.unwrap() as u16));
-            } else {
+				let size = o.type_kind.size() / 4;
+
+				for i in 1..=size {
+					program.code.push(MemoryCell::with_data(
+						OpCode::Mov4,
+						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+					));
+				}
+			} else {
                 panic!("[ICE: Assignment to unknown symbol after typechecking]");
-            }
+			}
 
             program.code.push(MemoryCell::with_data(
                 OpCode::StmtMarker,

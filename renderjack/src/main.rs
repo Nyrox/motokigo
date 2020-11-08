@@ -383,7 +383,7 @@ fn main() {
 
                 vm.set_global("normal", [n.x, n.y, n.z]);
 
-                
+
                 let mut result = vm.run_fn("main", vec![]);
                 let mut vm = loop {
                     match result {

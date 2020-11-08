@@ -256,5 +256,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                 ))
             }
         }
+        Expr::Grouped(e) => generate_expr(program, ast, fnc, e)
     }
 }

@@ -306,7 +306,7 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
         Token::LeftParen => {
             let e = parse_expr_bp(lexer, 0)?;
             lexer.expect_token(Token::RightParen)?;
-            e
+            Expr::Grouped(Box::new(e))
         }
         t if prefix_binding_power(t).is_some() => {
             let ((), r_bp) = prefix_binding_power(t).unwrap();

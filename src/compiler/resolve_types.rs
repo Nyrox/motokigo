@@ -171,7 +171,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     }
                 }
             }
-            Statement::Loop(ident, from, to, _) => {
+            Statement::Loop(_, from, to, _) => {
                 let l = from.expect_typekind();
                 if l != TypeKind::I32 {
                     Err(Box::new(TypeError::TypeError(

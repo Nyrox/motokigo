@@ -185,6 +185,7 @@ impl GenerateGLSL {
                 }
             }
             Expr::Literal(l) => l.to_string(),
+            Expr::Grouped(e) => format!("({})", self.generate_expr(e)),
         }
     }
 

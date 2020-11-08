@@ -98,6 +98,27 @@ impl<'a> Visitor for ResolveTypes<'a> {
         Ok(())
     }
 
+    fn pre_statement(&mut self, stmt: &mut Statement) -> VResult {
+        match stmt {
+            Statement::Loop(ident, _, _, _) => {
+                let scope = self.current_scope();
+
+                scope.symbols.insert(
+                    ident.item.clone(),
+                    SymbolMeta {
+                        type_kind: TypeKind::I32,
+                        is_static: false,
+                        is_mutable: false,
+                        stack_offset: None,
+                    },
+                );
+            },
+            _ => {}
+        }
+
+        Ok(())
+    }
+
     fn post_statement(&mut self, stmt: &mut Statement) -> VResult {
         match stmt {
             Statement::VariableDeclaration(is_mut, ident, rhs) => {
@@ -151,18 +172,6 @@ impl<'a> Visitor for ResolveTypes<'a> {
                 }
             }
             Statement::Loop(ident, from, to, _) => {
-                let scope = self.current_scope();
-
-                scope.symbols.insert(
-                    ident.item.clone(),
-                    SymbolMeta {
-                        type_kind: TypeKind::I32,
-                        is_static: false,
-                        is_mutable: false,
-                        stack_offset: None,
-                    },
-                );
-
                 let l = from.expect_typekind();
                 if l != TypeKind::I32 {
                     Err(Box::new(TypeError::TypeError(

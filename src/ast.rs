@@ -20,6 +20,9 @@ pub trait Visitor {
     fn function_decl(&mut self, _t: &mut FunctionDeclaration) -> VResult {
         Ok(())
     }
+    fn pre_statement(&mut self, _t: &mut Statement) -> VResult {
+        Ok(())
+    }
     fn post_statement(&mut self, _t: &mut Statement) -> VResult {
         Ok(())
     }
@@ -242,6 +245,8 @@ pub enum Statement {
 
 impl Visitable for Statement {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
+        v.pre_statement(self);
+
         match self {
             Statement::Assignment(_, expr) => expr.visit(v)?,
             Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,

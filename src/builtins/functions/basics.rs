@@ -232,3 +232,23 @@ macro_rules! implement_num_ops {
 
 implement_num_ops!(Float, f32);
 implement_num_ops!(Int, i32);
+
+#[generate_builtin_fn("int")]
+fn CastFloatInt(a: f32) -> i32 {
+    a as i32
+}
+
+#[generate_glsl_impl_inline("CastFloatInt")]
+fn generate(a: &str) -> String {
+    format!("int({})", a)
+}
+
+#[generate_builtin_fn("float")]
+fn CastIntFloat(a: i32) -> f32 {
+    a as f32
+}
+
+#[generate_glsl_impl_inline("CastIntFloat")]
+fn generate(a: &str) -> String {
+    format!("float({})", a)
+}

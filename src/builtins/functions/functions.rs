@@ -64,4 +64,6 @@ pub const FUNCTIONS: &[&dyn BuiltInCallable] = &[
 	&BinGreaterIntInt,
 	&BinGreaterEqualIntInt,
 	&BinEqualityIntInt,
+	&CastFloatInt,
+	&CastIntFloat,
 ];

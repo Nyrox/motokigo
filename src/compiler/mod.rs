@@ -93,9 +93,10 @@ pub fn generate_statement(
                     OpCode::Mov4Global,
                     o.stack_offset.unwrap() as u16,
                 ));
+            } else if let Some(o) = fnc.symbols.get(&i.item) {
+                program.code.push(MemoryCell::with_data(OpCode::Mov4, o.stack_offset.unwrap() as u16));
             } else {
-                fnc.symbols.get_mut(i.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
-                fnc.stack_offset += expr.typekind().unwrap().size();
+                panic!("[ICE: Assignment to unknown symbol after typechecking]");
             }
 
             program.code.push(MemoryCell::with_data(

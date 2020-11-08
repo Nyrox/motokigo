@@ -114,23 +114,11 @@ VMProgram {
         ),
         MemoryCell(
             ConstF32,
-            16256,
-        ),
-        MemoryCell(
-            CondJmp,
-            33,
-        ),
-        MemoryCell(
-            ConstF32,
-            0,
-        ),
-        MemoryCell(
-            ConstF32,
             0,
         ),
         MemoryCell(
             StmtMarker,
-            11,
+            10,
         ),
         MemoryCell(
             ConstF32,
@@ -142,7 +130,7 @@ VMProgram {
         ),
         MemoryCell(
             CondJmp,
-            39,
+            37,
         ),
         MemoryCell(
             ConstF32,
@@ -153,8 +141,12 @@ VMProgram {
             16256,
         ),
         MemoryCell(
+            Mov4,
+            28,
+        ),
+        MemoryCell(
             StmtMarker,
-            14,
+            13,
         ),
         MemoryCell(
             Load4,
@@ -178,7 +170,7 @@ VMProgram {
         ),
         MemoryCell(
             Load4,
-            32,
+            28,
         ),
         MemoryCell(
             Load4,
@@ -202,17 +194,25 @@ VMProgram {
         ),
         MemoryCell(
             StmtMarker,
-            18,
+            17,
         ),
         MemoryCell(
             Ret,
-            36,
+            32,
         ),
     ],
     data: ProgramData {
         functions: {
             "main": FuncMeta {
                 symbols: {
+                    "cos_a": SymbolMeta {
+                        type_kind: F32,
+                        stack_offset: Some(
+                            24,
+                        ),
+                        is_static: false,
+                        is_mutable: false,
+                    },
                     "L": SymbolMeta {
                         type_kind: Vector(
                             F32,
@@ -235,18 +235,10 @@ VMProgram {
                         is_static: false,
                         is_mutable: false,
                     },
-                    "cos_a": SymbolMeta {
-                        type_kind: F32,
-                        stack_offset: Some(
-                            24,
-                        ),
-                        is_static: false,
-                        is_mutable: false,
-                    },
                     "ambient": SymbolMeta {
                         type_kind: F32,
                         stack_offset: Some(
-                            32,
+                            28,
                         ),
                         is_static: false,
                         is_mutable: true,
@@ -255,7 +247,7 @@ VMProgram {
                 address: Some(
                     0,
                 ),
-                stack_offset: 36,
+                stack_offset: 32,
                 has_return: true,
             },
         },

@@ -1,16 +1,14 @@
-in Float ux
-in Float uy
+#version 330 core
 
-Vec3 main() {
-    let mut z = 0.5
+layout(location=0) in vec3 position;
+layout(location=1) in vec3 N;
 
-    for i=0 to 10 {
-        if ux * i > 1.0 {
-            z = z + 0.1
-        } else {
-            z = z - 0.1
-        }
-    }
+uniform mat4 view;
+uniform mat4 proj;
 
-    return Vec3(ux, uy, z)
+out vec3 normal;
+
+void main() {
+    gl_Position = proj * view * vec4(position, 1.0);
+    normal = N;
 }

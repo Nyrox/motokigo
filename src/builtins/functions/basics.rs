@@ -1,7 +1,7 @@
 use crate::ast::TypeKind;
 use crate::builtins::*;
 use crate::vm::VirtualMachine;
-use builtins::{
+use macros::{
     generate_builtin_fn, generate_glsl_impl_inline, generate_matrix_ctor, generate_vector_ctor,
 };
 

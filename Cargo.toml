@@ -10,15 +10,13 @@ edition = "2018"
 bytemuck="1.2"
 num-traits="*"
 paste="*"
-builtins={ path="./builtins/" }
-
+macros={ path="./macros" }
 
 [build-dependencies]
 regex="1"
 
 [workspace]
 members=[
-    "builtins",
     "macros",
 	"renderjack"
 ]

@@ -384,32 +384,35 @@ fn main() {
 
                 vm.set_global("normal", [n.x, n.y, n.z]);
 
-                let result = vm.run_fn("main", vec![8]);
-
-                let mut vm = match result {
-                    VMState::BreakpointEncountered(s) => {
-                        dbg!(s.breakpoint());
-                        let stack = s.generate_stack_view();
-                        dbg!(stack.current_fn);
-                        stack.symbols.iter().for_each(|(id, (tk, bytes))| {
-                            println!(
-                                "{} [{:?}]: {}",
-                                id,
-                                tk,
-                                match tk {
-                                    motokigo::ast::TypeKind::F32 =>
-                                        format!("{}", bytemuck::from_bytes::<f32>(&bytes)),
-                                    motokigo::ast::TypeKind::I32 =>
-                                        format!("{}", bytemuck::from_bytes::<i32>(&bytes)),
-                                    motokigo::ast::TypeKind::Vector(_, _) => panic!(),
-                                    _ => panic!(),
-                                }
-                            );
-                        });
-                        std::io::stdin().read_line(&mut String::new()).ok();
-                        s.resume().unwrap_vm()
-                    }
-                    VMState::VMRunFinished(s) => s.reset(),
+                
+                let mut result = vm.run_fn("main", vec![5, 7, 8]);
+                let mut vm = loop {
+                    match result {
+                        VMState::BreakpointEncountered(s) => {
+                            dbg!(s.breakpoint());
+                            let stack = s.generate_stack_view();
+                            dbg!(stack.current_fn);
+                            dbg!(x, y);
+                            stack.symbols.iter().for_each(|(id, (tk, bytes))| {
+                                println!(
+                                    "{} [{:?}]: {}",
+                                    id,
+                                    tk,
+                                    match tk {
+                                        motokigo::ast::TypeKind::F32 =>
+                                            format!("{}", bytemuck::from_bytes::<f32>(&bytes)),
+                                        motokigo::ast::TypeKind::I32 =>
+                                            format!("{}", bytemuck::from_bytes::<i32>(&bytes)),
+                                        motokigo::ast::TypeKind::Vector(_, _) => panic!(),
+                                        _ => panic!(),
+                                    }
+                                );
+                            });
+                            std::io::stdin().read_line(&mut String::new()).ok();
+                            result = s.resume();
+                        }
+                        VMState::VMRunFinished(s) => break s.0,
+                    };
                 };
 
                 let color: [f32; 3] = unsafe { vm.pop_stack() };

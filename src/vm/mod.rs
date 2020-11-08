@@ -31,7 +31,7 @@ pub enum OpCode {
 }
 
 pub struct VMBreakpointState<'a>(VirtualMachine<'a>, u16);
-pub struct VMRunFinishedState<'a>(VirtualMachine<'a>);
+pub struct VMRunFinishedState<'a>(pub VirtualMachine<'a>);
 
 pub enum VMState<'a> {
     BreakpointEncountered(VMBreakpointState<'a>),

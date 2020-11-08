@@ -112,3 +112,33 @@ fn UnNegFloat(a: f32) -> f32 {
 fn generate(a: &str) -> String {
     format!("-{}", a)
 }
+
+#[generate_builtin_fn("__op_binary_less")]
+fn BinLessIntInt(a: i32, b: i32) -> i32 {
+    if a < b { 1 } else { 0 }
+}
+
+#[generate_glsl_impl_inline("BinLessIntInt")]
+fn generate(a: &str, b: &str) -> String {
+    format!("{} < {}", a, b)
+}
+
+#[generate_builtin_fn("__op_binary_add")]
+fn BinAddFloatFloat(a: f32, b: f32) -> f32 {
+    a + b
+}
+
+#[generate_glsl_impl_inline("BinAddFloatFloat")]
+fn generate(a: &str, b: &str) -> String {
+    format!("{} + {}", a, b)
+}
+
+#[generate_builtin_fn("__op_binary_add")]
+fn BinAddIntInt(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[generate_glsl_impl_inline("BinAddIntInt")]
+fn generate(a: &str, b: &str) -> String {
+    format!("{} + {}", a, b)
+}

@@ -8,6 +8,8 @@ pub enum Token {
     Mut,
     If,
     Else,
+    For,
+    To,
 
     Float,
     LeftParen,
@@ -108,6 +110,8 @@ impl<I: Iterator<Item = char>> Scanner<I> {
             "mut" => Some(Token::Mut),
             "if" => Some(Token::If),
             "else" => Some(Token::Else),
+            "for" => Some(Token::For),
+            "to" => Some(Token::To),
             _ => None,
         }
     }

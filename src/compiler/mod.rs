@@ -70,11 +70,8 @@ pub fn generate_statement(
         Statement::VariableDeclaration(_, i, expr) => {
             generate_expr(program, &ast, fnc, &expr);
 
-            if let Some(o) = program.data.global_symbols.get(&i.item) {
-                program.code.push(MemoryCell::with_data(
-                    OpCode::Mov4Global,
-                    o.stack_offset.unwrap() as u16,
-                ));
+            if let Some(_) = program.data.global_symbols.get(&i.item) {
+                panic!("Don't redeclare a global");
             } else {
                 fnc.symbols.get_mut(i.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
                 fnc.stack_offset += expr.typekind().unwrap().size();
@@ -126,12 +123,12 @@ pub fn generate_statement(
                 if let Some(c) = &cond.cond {
                     generate_expr(program, ast, fnc, &c);
                     let label = program.code.len();
-                    program.code.push(MemoryCell::with_data(OpCode::CondJmp, 0));
+                    program.code.push(MemoryCell::with_data(OpCode::JmpZero, 0));
                     for s in cond.body.iter() {
                         generate_statement(program, ast, fnc, s);
                     }
                     program.code[label] =
-                        MemoryCell::with_data(OpCode::CondJmp, program.code.len() as u16);
+                        MemoryCell::with_data(OpCode::JmpZero, program.code.len() as u16);
                 } else {
                     for s in cond.body.iter() {
                         generate_statement(program, ast, fnc, s);
@@ -144,6 +141,50 @@ pub fn generate_statement(
             }
 
             generate_conditional_branch(program, ast, fnc, &cond);
+        }
+        Statement::Loop(ident, from, to, body) => {
+            generate_expr(program, &ast, fnc, &from);
+
+            if let Some(_) = program.data.global_symbols.get(&ident.item) {
+                panic!("Don't use a global in a loop");
+            } else {
+                // loop index var
+                fnc.symbols.get_mut(ident.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
+                let iter_offset = fnc.stack_offset;
+                fnc.stack_offset += from.typekind().unwrap().size();
+
+                program.code.push(MemoryCell::with_data(
+                    OpCode::StmtMarker,
+                    ident.from.line as u16,
+                ));
+
+                // condition
+                let cond = program.code.len();
+                program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
+                generate_expr(program, ast, fnc, to);
+                let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
+                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));              
+                let jmp = program.code.len();
+                program.code.push(MemoryCell::with_data(OpCode::JmpNotZero, 0));
+
+                // body
+                for s in body.iter() {
+                    generate_statement(program, ast, fnc, s);
+                }
+
+                // incr loop index
+                program.code.push(MemoryCell::with_data(OpCode::Const4, 1));
+                program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
+                let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
+                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, incr_fn as u16));
+                program.code.push(MemoryCell::with_data(OpCode::Mov4, iter_offset as u16));
+                
+                // jump to condition
+                program.code.push(MemoryCell::with_data(OpCode::Jmp, cond as u16));
+
+                // end label
+                program.code[jmp] = MemoryCell::with_data(OpCode::JmpNotZero, program.code.len() as u16);
+            }
         }
     };
 }
@@ -175,10 +216,16 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
         }
         Expr::Literal(l) => match l.item {
             Literal::DecimalLiteral(f) => {
-                program.code.push(MemoryCell::plain_inst(OpCode::ConstF32));
+                program.code.push(MemoryCell::plain_inst(OpCode::Const4));
                 program
                     .code
                     .push(MemoryCell::raw(unsafe { std::mem::transmute(f as f32) }));
+            }
+            Literal::IntegerLiteral(i) => {
+                program.code.push(MemoryCell::plain_inst(OpCode::Const4));
+                program
+                    .code
+                    .push(MemoryCell::raw(unsafe { std::mem::transmute(i as i32) }));
             }
             _ => unimplemented!(),
         },

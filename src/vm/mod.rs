@@ -12,13 +12,15 @@ pub use exports::*;
 #[repr(u16)]
 #[derive(Clone, Copy, Debug)]
 pub enum OpCode {
-    ConstF32,
+    Const4,
     Void,
     Mov4,
     Load4,
     Mov4Global,
     Load4Global,
-    CondJmp,
+    JmpNotZero,
+    JmpZero,
+    Jmp,
 
     Ret,
     Call,

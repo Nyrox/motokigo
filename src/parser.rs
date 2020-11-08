@@ -195,6 +195,19 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
             Token::If => {
                 output.push(Statement::Conditional(parse_conditional(tokens)?));
             }
+            Token::For => {
+                let ident = tokens.expect_identifier()?;
+                tokens.expect_token(Token::Equals)?;          
+                let from = parse_expr_bp(tokens, 0)?;        
+
+                tokens.expect_token(Token::To)?;  
+                let to = parse_expr_bp(tokens, 0)?;
+
+                tokens.expect_token(Token::LeftBrace)?;
+                let body = parse_statements(tokens)?;
+
+                output.push(Statement::Loop(ident, from, to, body));
+            }
             Token::RightBrace => break 'parsing,
             _ => {
                 return Err(ParsingError::UnexpectedToken(token));
@@ -207,9 +220,7 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
 
 pub fn parse_conditional(tokens: &mut impl TokenSource) -> ParsingResult<Conditional> {
     // cond
-    tokens.expect_token(Token::LeftParen)?;
     let cond = parse_expr_bp(tokens, 0)?;
-    tokens.expect_token(Token::RightParen)?;
 
     // body
     tokens.expect_token(Token::LeftBrace)?;

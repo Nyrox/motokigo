@@ -41,5 +41,8 @@ pub const FUNCTIONS: &[&dyn BuiltInCallable] = &[
 	&Mat4x3VectorConstructor,
 	&Mat4Constructor,
 	&Mat4VectorConstructor,
-	&UnNegFloat,
+    &UnNegFloat,
+    &BinLessIntInt,
+    &BinAddFloatFloat,
+    &BinAddIntInt,
 ];

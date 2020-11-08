@@ -384,7 +384,7 @@ fn main() {
 
                 vm.set_global("normal", [n.x, n.y, n.z]);
 
-                let result = vm.run_fn("main", vec![]);
+                let result = vm.run_fn("main", vec![8]);
 
                 let mut vm = match result {
                     VMState::BreakpointEncountered(s) => {
@@ -399,12 +399,14 @@ fn main() {
                                 match tk {
                                     motokigo::ast::TypeKind::F32 =>
                                         format!("{}", bytemuck::from_bytes::<f32>(&bytes)),
+                                    motokigo::ast::TypeKind::I32 =>
+                                        format!("{}", bytemuck::from_bytes::<i32>(&bytes)),
                                     motokigo::ast::TypeKind::Vector(_, _) => panic!(),
                                     _ => panic!(),
                                 }
                             );
                         });
-                        std::process::exit(0);
+                        std::io::stdin().read_line(&mut String::new()).ok();
                         s.resume().unwrap_vm()
                     }
                     VMState::VMRunFinished(s) => s.reset(),

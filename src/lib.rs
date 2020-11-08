@@ -26,7 +26,7 @@ mod tests {
             )
             .unwrap();
 
-            //compiler::compile(program.clone());
+            compiler::compile(program.clone());
             let glsl = glsl::generate_glsl(program);
 
             std::fs::write(format!("./debug/{}", p), glsl).unwrap();

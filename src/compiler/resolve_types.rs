@@ -150,6 +150,36 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     }
                 }
             }
+            Statement::Loop(ident, from, to, _) => {
+                let scope = self.current_scope();
+
+                scope.symbols.insert(
+                    ident.item.clone(),
+                    SymbolMeta {
+                        type_kind: TypeKind::I32,
+                        is_static: false,
+                        is_mutable: false,
+                        stack_offset: None,
+                    },
+                );
+
+                let l = from.expect_typekind();
+                if l != TypeKind::I32 {
+                    Err(Box::new(TypeError::TypeError(
+                        from.span().map(|_| String::from("ur bad")),
+                        TypeKind::I32,
+                        l,
+                    )))?
+                }
+                let r = to.expect_typekind();
+                if r != TypeKind::I32 {
+                    Err(Box::new(TypeError::TypeError(
+                        to.span().map(|_| String::from("ur bad")),
+                        TypeKind::I32,
+                        r,
+                    )))?
+                }
+            }
         }
 
         Ok(())

@@ -30,7 +30,7 @@ impl BuiltInType for i32 {
         std::mem::size_of::<i32>()
     }
     fn type_kind() -> TypeKind {
-        TypeKind::F32
+        TypeKind::I32
     }
 }
 

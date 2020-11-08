@@ -144,6 +144,20 @@ impl GenerateGLSL {
                         generate_conditional(self, conditional)
                     )
                 }
+                Statement::Loop(ident, from, to, body) => {
+                    let typekind = get_glsl_type(&from.typekind().unwrap());
+                    format!(
+                        "{}for ({} {}={}; {} < {}; i++) {{\n{}\n{}}}",
+                        self.indent_string(),
+                        typekind,
+                        ident.item,
+                        self.generate_expr(from),
+                        ident.item,
+                        self.generate_expr(to),
+                        self.generate_statements(&body),
+                        self.indent_string()
+                    )
+                }
             })
             .collect::<Vec<String>>()
             .join("\n");

@@ -237,6 +237,7 @@ pub enum Statement {
     VariableDeclaration(bool, Spanned<Ident>, Expr),
     Return(Spanned<()>, Expr),
     Conditional(Conditional),
+    Loop(Spanned<Ident>, Expr, Expr, Vec<Statement>),
 }
 
 impl Visitable for Statement {
@@ -246,6 +247,11 @@ impl Visitable for Statement {
             Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,
             Statement::Return(_, expr) => expr.visit(v)?,
             Statement::Conditional(cond) => cond.visit(v)?,
+            Statement::Loop(_, from, to, body) => {
+                from.visit(v)?;
+                to.visit(v)?;
+                body.visit(v)?;
+            }
         }
 
         v.post_statement(self)

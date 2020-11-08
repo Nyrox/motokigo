@@ -16,5 +16,9 @@ Vec3 main() {
         return newval
     }
 
+    for i=0 to 3 {
+        outval = newval
+    }
+
 	return outval
 }

@@ -81,6 +81,16 @@ macro_rules! implement_vec_op {
             fn generate(a: &str, b: &str) -> String {
                 format!("dot({}, {})", a, b)
             }
+
+            #[generate_builtin_fn("elem")]
+            fn [<Get $name Elem>](a: $name, b: i32) -> f32 {
+                a.get_elem(b as usize)
+            }
+
+            #[generate_glsl_impl_inline("Get{}Elem", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{}[{}]", a, b)
+            }
         }
     };
 }

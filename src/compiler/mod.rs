@@ -153,19 +153,20 @@ pub fn generate_statement(
                 let iter_offset = fnc.stack_offset;
                 fnc.stack_offset += from.typekind().unwrap().size();
 
-                program.code.push(MemoryCell::with_data(
-                    OpCode::StmtMarker,
-                    ident.from.line as u16,
-                ));
-
                 // condition
                 let cond = program.code.len();
                 program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
                 generate_expr(program, ast, fnc, to);
                 let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
                 program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));              
+                
+                program.code.push(MemoryCell::with_data(
+                    OpCode::StmtMarker,
+                    ident.from.line as u16,
+                ));
+
                 let jmp = program.code.len();
-                program.code.push(MemoryCell::with_data(OpCode::JmpNotZero, 0));
+                program.code.push(MemoryCell::with_data(OpCode::JmpZero, 0));
 
                 // body
                 for s in body.iter() {
@@ -173,7 +174,8 @@ pub fn generate_statement(
                 }
 
                 // incr loop index
-                program.code.push(MemoryCell::with_data(OpCode::Const4, 1));
+                program.code.push(MemoryCell::plain_inst(OpCode::Const4));
+                program.code.push(MemoryCell::raw(1));
                 program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
                 let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
                 program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, incr_fn as u16));
@@ -183,7 +185,7 @@ pub fn generate_statement(
                 program.code.push(MemoryCell::with_data(OpCode::Jmp, cond as u16));
 
                 // end label
-                program.code[jmp] = MemoryCell::with_data(OpCode::JmpNotZero, program.code.len() as u16);
+                program.code[jmp] = MemoryCell::with_data(OpCode::JmpZero, program.code.len() as u16);
             }
         }
     };

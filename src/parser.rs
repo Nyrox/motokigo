@@ -258,6 +258,11 @@ pub fn infix_binding_power(t: &Token) -> Option<(u8, u8)> {
         Token::Minus => Some((1, 2)),
         Token::Star => Some((3, 4)),
         Token::Slash => Some((3, 4)),
+        Token::Less => Some((0, 1)),
+        Token::LessEq => Some((0, 1)),
+        Token::Greater => Some((0, 1)),
+        Token::GreaterEq => Some((0, 1)),
+        Token::EqualsEquals => Some((0, 1)),
         _ => None,
     }
 }

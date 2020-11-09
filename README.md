@@ -51,8 +51,8 @@ Inputs to the shader are declared with the `in` and `uniform` keywords. These ar
 - [x] Operators, Operator Overloading
 - [x] Basic Type-Checking, including multiple built in types
 - [x] Conditional statements (If-Else)
+- [x] Loops
 - [ ] Product Types (Structs)
-- [ ] Loops
 - [ ] Opague Types (Samplers)
 
 ## GUI-Debugger

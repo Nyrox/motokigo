@@ -120,7 +120,9 @@ impl<'a> VirtualMachine<'a> {
                     self.depth += 1;
                     self.push_stack_raw(self.isp as u32);
                     self.push_stack_raw(self.stack_base as u32);
-                    self.stack_base = self.stack.len();
+                    unsafe {
+                        self.stack_base = self.stack.len() - self.pop_stack::<u32>() as usize;
+                    }
                     self.isp = p as usize;
                 }
                 OpCode::JmpZero => {
@@ -168,12 +170,12 @@ impl<'a> VirtualMachine<'a> {
                     // bytes the vm has on it's current stack frame, compared to the
                     // declared stack-length of the Ret-Parameter.
                     let frame_len = self.stack.len() - self.stack_base;
-                    let rv_len = frame_len - p as usize;
+                    let rv_len = p as usize;
 
                     let rv = self.pop_bytes(rv_len);
 
                     // now we pop locals off the stack
-                    for _ in 0..p {
+                    for _ in 0..(frame_len - p as usize) {
                         self.pop_bytes(0);
                     }
 

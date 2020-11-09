@@ -296,15 +296,18 @@ impl Visitable for Conditional {
 #[derive(Clone, Debug)]
 pub struct FunctionDeclaration {
     pub ident: Spanned<Ident>,
-    pub param_types: Vec<Spanned<Ident>>,
+    pub params: Vec<(Spanned<TypeKind>, Spanned<Ident>)>,
     pub statements: Vec<Statement>,
     pub ret_type: Spanned<TypeKind>,
 }
 
 impl Visitable for FunctionDeclaration {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
-        v.function_decl(self)?;
+        for (tk, _) in &mut self.params {
+            tk.item.visit(v)?;
+        }
         self.ret_type.item.visit(v)?;
+        v.function_decl(self)?;
         self.statements.visit(v)
     }
 }

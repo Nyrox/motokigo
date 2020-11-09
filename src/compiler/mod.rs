@@ -18,12 +18,12 @@ pub fn compile(mut ast: Program) -> VMProgram {
 
 pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
     let mut program = VMProgram::new();
-    program.data = data.clone();
+    program.data = data;
 
     let mut static_section = 0;
 
     for i in ast.in_parameters.iter() {
-        data.global_symbols.insert(
+        program.data.global_symbols.insert(
             i.ident.item.clone(),
             SymbolMeta {
                 stack_offset: Some(static_section),
@@ -33,28 +33,31 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             },
         );
 
+        // TODO: Bruh bruh bruh fix
         static_section += 12;
     }
 
-    program.data = data.clone();
-
     for f in ast.functions.iter() {
-        let mut fnc = data.functions.get_mut(f.ident.item.as_str()).unwrap();
-        fnc.address = Some(program.code.len());
+        let mut fnc = {
+            let mut fnc = program.data.functions.get_mut(f.ident.item.as_str()).unwrap();
+            fnc.address = Some(program.code.len());
+
+            let mut offset = 0;
+            for p in &mut fnc.symbols {
+                let mut sym = p.1;
+                sym.stack_offset = Some(offset);
+                offset += sym.type_kind.size();
+            }
+            fnc.stack_offset = offset;
+            fnc.clone()
+        };
 
         for s in f.statements.iter() {
-            generate_statement(&mut program, &ast, &mut fnc, s);
+            generate_statement(&mut program, &ast, &mut fnc, s);       
         }
-
-        if !fnc.has_return {
-            program.code.push(MemoryCell::plain_inst(OpCode::Void));
-            program
-                .code
-                .push(MemoryCell::with_data(OpCode::Ret, fnc.stack_offset as u16));
-        }
+        *program.data.functions.get_mut(f.ident.item.as_str()).unwrap() = fnc;
     }
 
-    program.data = data;
     program.data.static_section_size = static_section;
     program.data.min_stack_size = static_section + 1024;
     program
@@ -121,8 +124,7 @@ pub fn generate_statement(
             ));
             program
                 .code
-                .push(MemoryCell::with_data(OpCode::Ret, fnc.stack_offset as u16));
-            fnc.has_return = true;
+                .push(MemoryCell::with_data(OpCode::Ret, expr.expect_typekind().size() as u16));
         }
         Statement::Conditional(cond) => {
             fn generate_conditional_branch(
@@ -219,6 +221,7 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                     .code
                     .push(MemoryCell::with_data(OpCode::CallBuiltIn, func as u16));
             } else if let Some(func) = program.data.functions.get(id.raw.as_str()) {
+                program.code.push(MemoryCell::raw(func.param_types.iter().map(|x| x.size() as u32).sum()));
                 program.code.push(MemoryCell::with_data(
                     OpCode::Call,
                     func.address.unwrap() as u16,

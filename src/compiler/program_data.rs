@@ -15,7 +15,8 @@ pub struct FuncMeta {
     pub symbols: HashMap<String, SymbolMeta>,
     pub address: Option<usize>,
     pub stack_offset: usize,
-    pub has_return: bool,
+    pub return_type: Option<TypeKind>,
+    pub param_types: Vec<TypeKind>
 }
 
 impl FuncMeta {
@@ -24,7 +25,8 @@ impl FuncMeta {
             symbols: HashMap::new(),
             address: None,
             stack_offset: 0,
-            has_return: false,
+            return_type: None,
+            param_types: Vec::new(),
         }
     }
 }

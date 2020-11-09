@@ -121,6 +121,21 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 
                 // arg list
                 tokens.expect_token(Token::LeftParen)?;
+                let mut params = Vec::new();
+                while let Some(tok) = tokens.peek() {
+                    if tok.item == Token::RightParen { break; }
+                    let tk = tokens.expect_typekind()?;
+                    let ident = tokens.expect_identifier()?;
+                    params.push((tk, ident));
+
+                    if tokens.maybe_expect(Token::Comma).is_some() {
+                        if let Some(next) = tokens.peek() {
+                            if next.item == Token::RightParen {
+                                Err(ParsingError::UnexpectedToken(next.clone()))?
+                            }
+                        }
+                    }
+                }
                 tokens.expect_token(Token::RightParen)?;
 
                 // body
@@ -130,7 +145,7 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 
                 program.functions.push(FunctionDeclaration {
                     ident,
-                    param_types: vec![],
+                    params,
                     statements,
                     ret_type: tk,
                 });

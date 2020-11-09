@@ -61,7 +61,14 @@ impl GenerateGLSL {
 
         let func_body = self.generate_statements(&decl.statements);
 
-        let func_text = format!("{} {}() {{\n{}\n}}\n", glsl_type, func_ident, func_body);
+        let func_params = decl
+            .params
+            .iter()
+            .map(|(tk, ident)| format!("{} {}", get_glsl_type(tk), ident.item))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        let func_text = format!("{} {}({}) {{\n{}\n}}\n", glsl_type, func_ident, func_params, func_body);
 
         self.functions.push((func_ident, func_text));
     }
@@ -181,7 +188,7 @@ impl GenerateGLSL {
                 {
                     builtin.generate(self, args)
                 } else {
-                    format!("{}()", f.raw.clone().item)
+                    format!("{}({})", f.raw.clone().item, args.join(", "))
                 }
             }
             Expr::Literal(l) => l.to_string(),

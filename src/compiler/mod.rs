@@ -42,13 +42,7 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             let mut fnc = program.data.functions.get_mut(f.ident.item.as_str()).unwrap();
             fnc.address = Some(program.code.len());
 
-            let mut offset = 0;
-            for p in &mut fnc.symbols {
-                let mut sym = p.1;
-                sym.stack_offset = Some(offset);
-                offset += sym.type_kind.size();
-            }
-            fnc.stack_offset = offset;
+            fnc.stack_offset = fnc.param_types.iter().map(|t| t.size()).sum();
             fnc.clone()
         };
 
@@ -221,11 +215,11 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                     .code
                     .push(MemoryCell::with_data(OpCode::CallBuiltIn, func as u16));
             } else if let Some(func) = program.data.functions.get(id.raw.as_str()) {
-                program.code.push(MemoryCell::raw(func.param_types.iter().map(|x| x.size() as u32).sum()));
                 program.code.push(MemoryCell::with_data(
                     OpCode::Call,
                     func.address.unwrap() as u16,
                 ));
+                program.code.push(MemoryCell::raw(func.param_types.iter().map(|t| t.size() as u32).sum()));
             } else {
                 panic!("Unrecognized function: {:?}: ({:?})", id, arg_types);
             }

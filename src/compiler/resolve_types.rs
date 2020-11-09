@@ -94,6 +94,8 @@ impl<'a> Visitor for ResolveTypes<'a> {
 
         let mut fnc = FuncMeta::new();
         fnc.return_type = Some(func.ret_type.item.clone());
+        let mut param_offset = 0;
+
         for (tk, ident) in &func.params {
             fnc.symbols.insert(
                 ident.item.clone(),
@@ -101,9 +103,11 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     type_kind: tk.item.clone(),
                     is_static: false,
                     is_mutable: false,
-                    stack_offset: None,
+                    stack_offset: Some(param_offset),
                 }
             );
+
+            param_offset += tk.size();
         }
         fnc.param_types = func.params.iter().map(|x| x.0.item.clone()).collect();
 

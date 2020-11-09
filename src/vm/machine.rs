@@ -17,13 +17,19 @@ impl VMProgram {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct StackFrame {
+    return_addr: usize,
+    stack_base: usize,
+}
+
 #[derive(Clone)]
 pub struct VirtualMachine<'a> {
     pub program: &'a VMProgram,
     pub stack: Vec<u8>,
+    pub call_stack: Vec<StackFrame>,
     pub isp: usize,
     pub stack_base: usize,
-    pub depth: usize,
     pub breakpoints: Vec<u16>,
 }
 
@@ -33,7 +39,7 @@ impl<'a> VirtualMachine<'a> {
             program,
             stack: vec![0; program.data.min_stack_size],
             isp: 0,
-            depth: 0,
+            call_stack: Vec::new(),
             stack_base: 0,
             breakpoints: vec![],
         }
@@ -98,7 +104,6 @@ impl<'a> VirtualMachine<'a> {
     pub fn run_fn(mut self, id: &str, breakpoints: Vec<u16>) -> VMState<'a> {
         let fnc = self.program.data.functions.get(id).unwrap();
         self.isp = fnc.address.unwrap();
-        self.depth = 0;
         self.stack_base = self.stack.len();
         self.breakpoints = breakpoints;
 
@@ -117,11 +122,13 @@ impl<'a> VirtualMachine<'a> {
                     }
                 }
                 OpCode::Call => {
-                    self.depth += 1;
-                    self.push_stack_raw(self.isp as u32);
-                    self.push_stack_raw(self.stack_base as u32);
+                    self.call_stack.push(StackFrame {
+                        return_addr: self.isp + 1,
+                        stack_base: self.stack_base,
+                    });
+
                     unsafe {
-                        self.stack_base = self.stack.len() - self.pop_stack::<u32>() as usize;
+                        self.stack_base = self.stack.len() - self.program.code[self.isp].data as usize;
                     }
                     self.isp = p as usize;
                 }
@@ -179,16 +186,14 @@ impl<'a> VirtualMachine<'a> {
                         self.pop_bytes(0);
                     }
 
-                    // check if we are in main, if so we are done
-                    if self.depth == 0 {
-                        self.push_bytes(&rv);
+                    self.push_bytes(&rv);
+
+                    if let Some(sf) = self.call_stack.pop() { // ret
+                        self.stack_base = sf.stack_base;
+                        self.isp = sf.return_addr;
+                    } else { // returned from main
                         return VMState::VMRunFinished(VMRunFinishedState(self));
                     }
-                    // restore previous stack frame
-                    self.stack_base = self.pop_stack::<u32>() as usize;
-                    self.isp = self.pop_stack::<u32>() as usize;
-
-                    self.push_bytes(&rv);
                 },
                 o => unimplemented!("{:?}", o),
             }

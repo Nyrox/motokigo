@@ -94,10 +94,30 @@ impl<'a> Visitor for ResolveTypes<'a> {
 
     fn function_decl(&mut self, func: &mut FunctionDeclaration) -> VResult {
         self.current_scope = Some(func.ident.item.clone());
+
+        let mut fnc = FuncMeta::new();
+        fnc.return_type = Some(func.ret_type.item.clone());
+        let mut param_offset = 0;
+
+        for (tk, ident) in &func.params {
+            fnc.symbols.insert(
+                ident.item.clone(),
+                SymbolMeta {
+                    type_kind: tk.item.clone(),
+                    is_static: false,
+                    is_mutable: false,
+                    stack_offset: Some(param_offset),
+                }
+            );
+
+            param_offset += tk.size();
+        }
+        fnc.param_types = func.params.iter().map(|x| x.0.item.clone()).collect();
+
         self.program_data
             .functions
-            .insert(func.ident.item.clone(), FuncMeta::new());
-
+            .insert(func.ident.item.clone(), fnc);
+        
         Ok(())
     }
 
@@ -208,7 +228,8 @@ impl<'a> Visitor for ResolveTypes<'a> {
         {
             func.0.resolved = Some((func.0.raw.item.clone(), builtin.return_type()));
             Ok(())
-        } else if let Some(_) = self.program_data.functions.get(func.0.raw.as_str()) {
+        } else if let Some(f) = self.program_data.functions.get(func.0.raw.as_str()) {
+            func.0.resolved = Some((func.0.raw.item.clone(), f.return_type.clone().unwrap()));
             Ok(())
         } else {
             Err(Box::new(TypeError::UnknownFunction(

@@ -2,7 +2,6 @@
 
 pub mod camera;
 pub mod mesh;
-pub mod opengl;
 pub mod shader;
 pub mod transform;
 

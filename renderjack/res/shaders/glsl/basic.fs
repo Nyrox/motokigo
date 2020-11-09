@@ -3,11 +3,13 @@
 in vec3 normal;
 out vec3 out_0;
 
+float foo(float a, float b) {
+	return a + b;
+}
+
 vec3 __impl_main() {
-	float ambient = 0.5;
-	for (int i=0; i < 5; i++) {
-		ambient = ambient + 0.1;
-	}
+	float ambient = 0.0;
+	ambient = foo(0.5, 0.5);
 	return vec3(ambient, ambient, ambient);
 }
 

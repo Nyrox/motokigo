@@ -6,8 +6,6 @@ pub mod resolve_types;
 
 use program_data::{FuncMeta, ProgramData, SymbolMeta};
 
-pub static mut COUNTER: i32 = 0;
-
 pub fn compile(mut ast: Program) -> VMProgram {
     let mut program_data = ProgramData::new();
 

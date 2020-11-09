@@ -180,9 +180,7 @@ impl<'a> VirtualMachine<'a> {
                     let rv = self.pop_bytes(rv_len);
 
                     // now we pop locals off the stack
-                    for _ in 0..(frame_len - p as usize) {
-                        self.pop_bytes(0);
-                    }
+                    self.pop_bytes(frame_len - p as usize);
 
                     self.push_bytes(&rv);
 

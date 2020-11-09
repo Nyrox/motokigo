@@ -825,6 +825,7 @@ dependencies = [
  "macros",
  "num-traits",
  "paste",
+ "rand",
  "regex",
 ]
 

@@ -103,54 +103,9 @@ generate_matrix_ctor!(4, 2);
 generate_matrix_ctor!(4, 3);
 generate_matrix_ctor!(4, 4);
 
-macro_rules! implement_num_ops {
+macro_rules! implement_comparison_num_ops {
     ( $name:ident, $t:ident ) => {
         paste::item! {
-
-            // Add
-            #[generate_builtin_fn("__op_binary_add")]
-            fn [<BinAdd $name $name>](a: $t, b: $t) -> $t {
-                a + b
-            }
-
-            #[generate_glsl_impl_inline("BinAdd{}{}", $name)]
-            fn generate(a: &str, b: &str) -> String {
-                format!("{} + {}", a, b)
-            }
-
-            // Mul
-            #[generate_builtin_fn("__op_binary_mul")]
-            fn [<BinMul $name $name>](a: $t, b: $t) -> $t {
-                a * b
-            }
-
-            #[generate_glsl_impl_inline("BinMul{}{}", $name)]
-            fn generate(a: &str, b: &str) -> String {
-                format!("{} * {}", a, b)
-            }
-            
-            // Sub
-            #[generate_builtin_fn("__op_binary_sub")]
-            fn [<BinSub $name $name>](a: $t, b: $t) -> $t {
-                a - b
-            }
-
-            #[generate_glsl_impl_inline("BinSub{}{}", $name)]
-            fn generate(a: &str, b: &str) -> String {
-                format!("{} - {}", a, b)
-            }
-
-            // Div
-            #[generate_builtin_fn("__op_binary_div")]
-            fn [<BinDiv $name $name>](a: $t, b: $t) -> $t {
-                a / b
-            }
-
-            #[generate_glsl_impl_inline("BinDiv{}{}", $name)]
-            fn generate(a: &str, b: &str) -> String {
-                format!("{} / {}", a, b)
-            }
-
             // Negation
             #[generate_builtin_fn("__op_unary_neg")]
             fn [<UnNeg $name>](a: $t) -> $t {
@@ -161,7 +116,7 @@ macro_rules! implement_num_ops {
             fn generate(a: &str) -> String {
                 format!("-{}", a)
             }
-        
+
             // Less
             #[generate_builtin_fn("__op_binary_less")]
             fn [<BinLess $name $name>](a: $t, b: $t) -> $t {
@@ -217,8 +172,111 @@ macro_rules! implement_num_ops {
                 format!("{} == {}", a, b)
             }
         }
-    }
+    };
 }
 
-implement_num_ops!(Float, f32);
-implement_num_ops!(Int, i32);
+macro_rules! implement_arithmetic_num_ops {
+    ( $name:ident, $t:ident ) => {
+        paste::item! {
+            // Add
+            #[generate_builtin_fn("__op_binary_add")]
+            fn [<BinAdd $name $name>](a: $t, b: $t) -> $t {
+                a + b
+            }
+
+            #[generate_glsl_impl_inline("BinAdd{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} + {}", a, b)
+            }
+
+            // Mul
+            #[generate_builtin_fn("__op_binary_mul")]
+            fn [<BinMul $name $name>](a: $t, b: $t) -> $t {
+                a * b
+            }
+
+            #[generate_glsl_impl_inline("BinMul{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} * {}", a, b)
+            }
+
+            // Sub
+            #[generate_builtin_fn("__op_binary_sub")]
+            fn [<BinSub $name $name>](a: $t, b: $t) -> $t {
+                a - b
+            }
+
+            #[generate_glsl_impl_inline("BinSub{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} - {}", a, b)
+            }
+
+            // Div
+            #[generate_builtin_fn("__op_binary_div")]
+            fn [<BinDiv $name $name>](a: $t, b: $t) -> $t {
+                a / b
+            }
+
+            #[generate_glsl_impl_inline("BinDiv{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} / {}", a, b)
+            }
+        }
+    };
+}
+
+macro_rules! implement_wrapped_arithmetic_num_ops {
+    ( $name:ident, $t:ident ) => {
+        paste::item! {
+            // Add
+            #[generate_builtin_fn("__op_binary_add")]
+            fn [<BinAdd $name $name>](a: $t, b: $t) -> $t {
+                a.wrapping_add(b)
+            }
+
+            #[generate_glsl_impl_inline("BinAdd{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} + {}", a, b)
+            }
+
+            // Mul
+            #[generate_builtin_fn("__op_binary_mul")]
+            fn [<BinMul $name $name>](a: $t, b: $t) -> $t {
+                a.wrapping_mul(b)
+            }
+
+            #[generate_glsl_impl_inline("BinMul{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} * {}", a, b)
+            }
+
+            // Sub
+            #[generate_builtin_fn("__op_binary_sub")]
+            fn [<BinSub $name $name>](a: $t, b: $t) -> $t {
+                a.wrapping_sub(b)
+            }
+
+            #[generate_glsl_impl_inline("BinSub{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} - {}", a, b)
+            }
+
+            // Div
+            #[generate_builtin_fn("__op_binary_div")]
+            fn [<BinDiv $name $name>](a: $t, b: $t) -> $t {
+                a.wrapping_div(b)
+            }
+
+            #[generate_glsl_impl_inline("BinDiv{}{}", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{} / {}", a, b)
+            }
+        }
+    };
+}
+
+
+implement_comparison_num_ops!(Float, f32);
+implement_comparison_num_ops!(Int, i32);
+implement_arithmetic_num_ops!(Float, f32);
+implement_wrapped_arithmetic_num_ops!(Int, i32);

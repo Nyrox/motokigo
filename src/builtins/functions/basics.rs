@@ -81,6 +81,16 @@ macro_rules! implement_vec_op {
             fn generate(a: &str, b: &str) -> String {
                 format!("dot({}, {})", a, b)
             }
+
+            #[generate_builtin_fn("elem")]
+            fn [<Get $name Elem>](a: $name, b: i32) -> f32 {
+                a.get_elem(b as usize)
+            }
+
+            #[generate_glsl_impl_inline("Get{}Elem", $name)]
+            fn generate(a: &str, b: &str) -> String {
+                format!("{}[{}]", a, b)
+            }
         }
     };
 }
@@ -280,3 +290,24 @@ implement_comparison_num_ops!(Float, f32);
 implement_comparison_num_ops!(Int, i32);
 implement_arithmetic_num_ops!(Float, f32);
 implement_wrapped_arithmetic_num_ops!(Int, i32);
+
+
+#[generate_builtin_fn("int")]
+fn CastFloatInt(a: f32) -> i32 {
+    a as i32
+}
+
+#[generate_glsl_impl_inline("CastFloatInt")]
+fn generate(a: &str) -> String {
+    format!("int({})", a)
+}
+
+#[generate_builtin_fn("float")]
+fn CastIntFloat(a: i32) -> f32 {
+    a as f32
+}
+
+#[generate_glsl_impl_inline("CastIntFloat")]
+fn generate(a: &str) -> String {
+    format!("float({})", a)
+}

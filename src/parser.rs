@@ -34,24 +34,41 @@ pub trait TokenSource {
     fn peek(&mut self) -> Option<&ItemType>;
 
     fn expect_next(&mut self) -> ParsingResult<ItemType> {
-        match TokenSource::next(self) {
+        match self.next() {
             None => Err(ParsingError::UnexpectedEndOfInput),
             Some(t) => Ok(t),
         }
     }
 
     fn expect_token(&mut self, token: Token) -> ParsingResult<ItemType> {
-        match TokenSource::expect_next(self)? {
+        match self.expect_next()? {
             t if *t == token => Ok(t),
             t => Err(ParsingError::UnexpectedToken(t)),
         }
     }
 
     fn expect_identifier(&mut self) -> ParsingResult<Spanned<String>> {
-        let token = TokenSource::expect_next(self)?;
+        let token = self.expect_next()?;
         match token.item {
             Token::Identifier(s) => Ok(Spanned::new(s, token.from, token.to)),
             _ => Err(ParsingError::UnexpectedToken(token)),
+        }
+    }
+
+    fn expect_typekind(&mut self) -> ParsingResult<Spanned<TypeKind>> {
+        let token = self.expect_next()?;
+    
+        let res = token.map(|t| match t {
+            Token::Float => Ok(TypeKind::F32),
+            Token::Int => Ok(TypeKind::I32),
+            Token::Void => Ok(TypeKind::Void),
+            Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
+            t => Err(ParsingError::UnexpectedToken(token.map(|_| t.clone()))),
+        });
+    
+        match res.item {
+            Ok(t) => Ok(token.map(|_| t)),
+            Err(e) => Err(e),
         }
     }
 
@@ -76,37 +93,11 @@ where
     }
 }
 
-pub fn get_typekind(t: &Token) -> Option<TypeKind> {
-    Some(match t {
-        Token::Float => TypeKind::F32,
-        Token::Void => TypeKind::Void,
-        _ => {
-            return None;
-        }
-    })
-}
-
-pub fn expect_typekind(tokens: &mut impl TokenSource) -> ParsingResult<Spanned<TypeKind>> {
-    let token = tokens.expect_next()?;
-
-    let res = token.map(|t| match t {
-        Token::Float => Ok(TypeKind::F32),
-        Token::Void => Ok(TypeKind::Void),
-        Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
-        t => Err(ParsingError::UnexpectedToken(token.map(|_| t.clone()))),
-    });
-
-    match res.item {
-        Ok(t) => Ok(token.map(|_| t)),
-        Err(e) => Err(e),
-    }
-}
-
 pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
     let mut program = Program::new();
 
     'parsing: loop {
-        let token = tokens.next();
+        let token = tokens.peek();
         if token.is_none() {
             break 'parsing;
         }
@@ -114,7 +105,8 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 
         match &token.item {
             Token::In => {
-                let type_kind = expect_typekind(tokens)?;
+                tokens.expect_token(Token::In)?;
+                let type_kind = tokens.expect_typekind()?;
 
                 let ident = tokens.expect_identifier()?;
                 program
@@ -123,14 +115,8 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
                 continue;
             }
             // func declarations
-            t => {
-                let tk = match &t {
-                    Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
-                    t => match get_typekind(&t) {
-                        Some(v) => Ok(v),
-                        None => Err(ParsingError::UnexpectedToken(token.clone())),
-                    },
-                }?;
+            _ => {
+                let tk = tokens.expect_typekind()?;
                 let ident = tokens.expect_identifier()?;
 
                 // arg list
@@ -146,7 +132,7 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
                     ident,
                     param_types: vec![],
                     statements,
-                    ret_type: token.map(|_| tk),
+                    ret_type: tk,
                 });
             }
         }
@@ -258,6 +244,11 @@ pub fn infix_binding_power(t: &Token) -> Option<(u8, u8)> {
         Token::Minus => Some((1, 2)),
         Token::Star => Some((3, 4)),
         Token::Slash => Some((3, 4)),
+        Token::Less => Some((0, 1)),
+        Token::LessEq => Some((0, 1)),
+        Token::Greater => Some((0, 1)),
+        Token::GreaterEq => Some((0, 1)),
+        Token::EqualsEquals => Some((0, 1)),
         _ => None,
     }
 }
@@ -301,7 +292,7 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
         Token::LeftParen => {
             let e = parse_expr_bp(lexer, 0)?;
             lexer.expect_token(Token::RightParen)?;
-            e
+            Expr::Grouped(Box::new(e))
         }
         t if prefix_binding_power(t).is_some() => {
             let ((), r_bp) = prefix_binding_power(t).unwrap();

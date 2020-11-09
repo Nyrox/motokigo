@@ -20,6 +20,9 @@ pub trait Visitor {
     fn function_decl(&mut self, _t: &mut FunctionDeclaration) -> VResult {
         Ok(())
     }
+    fn pre_statement(&mut self, _t: &mut Statement) -> VResult {
+        Ok(())
+    }
     fn post_statement(&mut self, _t: &mut Statement) -> VResult {
         Ok(())
     }
@@ -126,7 +129,13 @@ impl Literal {
     pub fn to_string(&self) -> String {
         match self {
             Literal::IntegerLiteral(i) => format!("{}", i),
-            Literal::DecimalLiteral(f) => format!("{}", f),
+            Literal::DecimalLiteral(f) => {
+                if f.fract() == 0.0 {
+                    format!("{}.0", f)
+                } else {
+                    format!("{}", f)
+                }              
+            }
         }
     }
 }
@@ -184,6 +193,7 @@ pub enum Expr {
     FuncCall(FuncCall),
     Literal(Spanned<Literal>),
     Symbol(Symbol),
+    Grouped(Box<Expr>)
 }
 
 impl Expr {
@@ -195,6 +205,7 @@ impl Expr {
                 Literal::DecimalLiteral(_) => Some(TypeKind::F32),
                 Literal::IntegerLiteral(_) => Some(TypeKind::I32),
             },
+            Expr::Grouped(e) => e.typekind()
         }
     }
 
@@ -210,6 +221,7 @@ impl Expr {
             Self::FuncCall(fc) => fc.0.raw.map(|_| ()),
             Self::Literal(lit) => lit.map(|_| ()),
             Self::Symbol(sym) => sym.raw.map(|_| ()),
+            Self::Grouped(e) => e.span()
         }
     }
 }
@@ -224,7 +236,8 @@ impl Visitable for Expr {
                 v.post_func_call(func)?;
             }
             Expr::Symbol(s) => s.visit(v)?,
-            _ => (),
+            Expr::Grouped(e) => e.visit(v)?,
+            Expr::Literal(_) => (),
         }
 
         v.post_expr(self)
@@ -242,6 +255,8 @@ pub enum Statement {
 
 impl Visitable for Statement {
     fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
+        v.pre_statement(self)?;
+
         match self {
             Statement::Assignment(_, expr) => expr.visit(v)?,
             Statement::VariableDeclaration(_, _, expr) => expr.visit(v)?,

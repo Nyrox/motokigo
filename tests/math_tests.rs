@@ -38,8 +38,7 @@ macro_rules! generate_basic_op_test {
 
                 let program = compiler::compile(program);
 
-                let mut rng = rand::thread_rng();
-                for i in 0..TEST_ITERATIONS {
+                for _ in 0..TEST_ITERATIONS {
                     let mut vm = motokigo::vm::VirtualMachine::new(&program);
                     let a = rand::random::<$tr>();
                     let b = rand::random::<$tr>();

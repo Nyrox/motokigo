@@ -2,3 +2,5 @@
 **/*.rs.bk
 /.vscode
 /.ionide
+/debug
+output.png

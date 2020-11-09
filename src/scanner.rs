@@ -11,6 +11,7 @@ pub enum Token {
     For,
     To,
 
+    Int,
     Float,
     LeftParen,
     RightParen,
@@ -137,8 +138,8 @@ impl<I: Iterator<Item = char>> Scanner<I> {
         };
         let peeked = self.peek();
 
+        let to = self.position();
         let tok = |t| {
-            let to = self.position();
             Ok(ScanningProduct::Token(Spanned::new(t, from, to)))
         };
 
@@ -147,7 +148,6 @@ impl<I: Iterator<Item = char>> Scanner<I> {
             ')' => tok(Token::RightParen),
             '{' => tok(Token::LeftBrace),
             '}' => tok(Token::RightBrace),
-            '=' => tok(Token::Equals),
             '-' => tok(Token::Minus),
             '+' => tok(Token::Plus),
             '/' => match peeked {
@@ -162,6 +162,12 @@ impl<I: Iterator<Item = char>> Scanner<I> {
             },
             '*' => tok(Token::Star),
             ',' => tok(Token::Comma),
+            '<' if peeked == Some('=') => { self.advance(); tok(Token::LessEq) },
+            '>' if peeked == Some('=') => { self.advance(); tok(Token::GreaterEq) },
+            '=' if peeked == Some('=') => { self.advance(); tok(Token::EqualsEquals) },
+            '<' => tok(Token::Less),
+            '>' => tok(Token::Greater),
+            '=' => tok(Token::Equals),
 
             '\n' => {
                 self.line += 1;

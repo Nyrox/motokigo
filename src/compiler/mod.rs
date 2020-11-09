@@ -86,15 +86,26 @@ pub fn generate_statement(
             generate_expr(program, &ast, fnc, &expr);
 
             if let Some(o) = program.data.global_symbols.get(&i.item) {
-                program.code.push(MemoryCell::with_data(
-                    OpCode::Mov4Global,
-                    o.stack_offset.unwrap() as u16,
-                ));
+				let size = o.type_kind.size() / 4;
+
+				for i in 1..=size {
+					program.code.push(MemoryCell::with_data(
+						OpCode::Mov4Global,
+						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+					));
+				}
             } else if let Some(o) = fnc.symbols.get(&i.item) {
-                program.code.push(MemoryCell::with_data(OpCode::Mov4, o.stack_offset.unwrap() as u16));
-            } else {
+				let size = o.type_kind.size() / 4;
+
+				for i in 1..=size {
+					program.code.push(MemoryCell::with_data(
+						OpCode::Mov4,
+						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+					));
+				}
+			} else {
                 panic!("[ICE: Assignment to unknown symbol after typechecking]");
-            }
+			}
 
             program.code.push(MemoryCell::with_data(
                 OpCode::StmtMarker,
@@ -158,8 +169,8 @@ pub fn generate_statement(
                 program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
                 generate_expr(program, ast, fnc, to);
                 let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
-                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));              
-                
+                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));
+
                 program.code.push(MemoryCell::with_data(
                     OpCode::StmtMarker,
                     ident.from.line as u16,
@@ -180,7 +191,7 @@ pub fn generate_statement(
                 let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
                 program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, incr_fn as u16));
                 program.code.push(MemoryCell::with_data(OpCode::Mov4, iter_offset as u16));
-                
+
                 // jump to condition
                 program.code.push(MemoryCell::with_data(OpCode::Jmp, cond as u16));
 
@@ -256,5 +267,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                 ))
             }
         }
+        Expr::Grouped(e) => generate_expr(program, ast, fnc, e)
     }
 }

@@ -136,9 +136,10 @@ pub fn generate_builtin_fn(
             fn vm_impl(&self, vm: &mut VirtualMachine) {
                 #(#args)*
 
-                #func;
+				#func;
 
                 let rv = __impl(#(#call_args),*);
+
 
                 vm.push_stack(rv);
             }

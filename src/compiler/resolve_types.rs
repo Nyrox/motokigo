@@ -107,7 +107,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     is_static: false,
                     is_mutable: false,
                     stack_offset: Some(param_offset),
-                }
+                },
             );
 
             param_offset += tk.size();
@@ -117,7 +117,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
         self.program_data
             .functions
             .insert(func.ident.item.clone(), fnc);
-        
+
         Ok(())
     }
 
@@ -135,7 +135,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                         stack_offset: None,
                     },
                 );
-            },
+            }
             _ => {}
         }
 

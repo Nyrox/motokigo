@@ -285,12 +285,10 @@ macro_rules! implement_wrapped_arithmetic_num_ops {
     };
 }
 
-
 implement_comparison_num_ops!(Float, f32);
 implement_comparison_num_ops!(Int, i32);
 implement_arithmetic_num_ops!(Float, f32);
 implement_wrapped_arithmetic_num_ops!(Int, i32);
-
 
 #[generate_builtin_fn("int")]
 fn CastFloatInt(a: f32) -> i32 {

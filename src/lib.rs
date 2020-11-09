@@ -11,7 +11,7 @@ pub mod vm;
 
 #[cfg(test)]
 mod tests {
-    use super::{compiler, parser, glsl};
+    use super::{compiler, glsl, parser};
 
     #[test]
     pub fn test_everything() {

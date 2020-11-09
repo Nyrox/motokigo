@@ -57,7 +57,7 @@ pub trait TokenSource {
 
     fn expect_typekind(&mut self) -> ParsingResult<Spanned<TypeKind>> {
         let token = self.expect_next()?;
-    
+
         let res = token.map(|t| match t {
             Token::Float => Ok(TypeKind::F32),
             Token::Int => Ok(TypeKind::I32),
@@ -65,7 +65,7 @@ pub trait TokenSource {
             Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
             t => Err(ParsingError::UnexpectedToken(token.map(|_| t.clone()))),
         });
-    
+
         match res.item {
             Ok(t) => Ok(token.map(|_| t)),
             Err(e) => Err(e),
@@ -123,7 +123,9 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
                 tokens.expect_token(Token::LeftParen)?;
                 let mut params = Vec::new();
                 while let Some(tok) = tokens.peek() {
-                    if tok.item == Token::RightParen { break; }
+                    if tok.item == Token::RightParen {
+                        break;
+                    }
                     let tk = tokens.expect_typekind()?;
                     let ident = tokens.expect_identifier()?;
                     params.push((tk, ident));
@@ -198,10 +200,10 @@ pub fn parse_statements(tokens: &mut impl TokenSource) -> ParsingResult<Vec<Stat
             }
             Token::For => {
                 let ident = tokens.expect_identifier()?;
-                tokens.expect_token(Token::Equals)?;          
-                let from = parse_expr_bp(tokens, 0)?;        
+                tokens.expect_token(Token::Equals)?;
+                let from = parse_expr_bp(tokens, 0)?;
 
-                tokens.expect_token(Token::To)?;  
+                tokens.expect_token(Token::To)?;
                 let to = parse_expr_bp(tokens, 0)?;
 
                 tokens.expect_token(Token::LeftBrace)?;

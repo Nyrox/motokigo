@@ -134,7 +134,7 @@ impl Literal {
                     format!("{}.0", f)
                 } else {
                     format!("{}", f)
-                }              
+                }
             }
         }
     }
@@ -193,7 +193,7 @@ pub enum Expr {
     FuncCall(FuncCall),
     Literal(Spanned<Literal>),
     Symbol(Symbol),
-    Grouped(Box<Expr>)
+    Grouped(Box<Expr>),
 }
 
 impl Expr {
@@ -205,7 +205,7 @@ impl Expr {
                 Literal::DecimalLiteral(_) => Some(TypeKind::F32),
                 Literal::IntegerLiteral(_) => Some(TypeKind::I32),
             },
-            Expr::Grouped(e) => e.typekind()
+            Expr::Grouped(e) => e.typekind(),
         }
     }
 
@@ -221,7 +221,7 @@ impl Expr {
             Self::FuncCall(fc) => fc.0.raw.map(|_| ()),
             Self::Literal(lit) => lit.map(|_| ()),
             Self::Symbol(sym) => sym.raw.map(|_| ()),
-            Self::Grouped(e) => e.span()
+            Self::Grouped(e) => e.span(),
         }
     }
 }

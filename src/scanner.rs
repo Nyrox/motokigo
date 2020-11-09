@@ -139,9 +139,7 @@ impl<I: Iterator<Item = char>> Scanner<I> {
         let peeked = self.peek();
 
         let to = self.position();
-        let tok = |t| {
-            Ok(ScanningProduct::Token(Spanned::new(t, from, to)))
-        };
+        let tok = |t| Ok(ScanningProduct::Token(Spanned::new(t, from, to)));
 
         match c {
             '(' => tok(Token::LeftParen),
@@ -162,9 +160,18 @@ impl<I: Iterator<Item = char>> Scanner<I> {
             },
             '*' => tok(Token::Star),
             ',' => tok(Token::Comma),
-            '<' if peeked == Some('=') => { self.advance(); tok(Token::LessEq) },
-            '>' if peeked == Some('=') => { self.advance(); tok(Token::GreaterEq) },
-            '=' if peeked == Some('=') => { self.advance(); tok(Token::EqualsEquals) },
+            '<' if peeked == Some('=') => {
+                self.advance();
+                tok(Token::LessEq)
+            }
+            '>' if peeked == Some('=') => {
+                self.advance();
+                tok(Token::GreaterEq)
+            }
+            '=' if peeked == Some('=') => {
+                self.advance();
+                tok(Token::EqualsEquals)
+            }
             '<' => tok(Token::Less),
             '>' => tok(Token::Greater),
             '=' => tok(Token::Equals),

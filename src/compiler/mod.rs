@@ -16,7 +16,7 @@ pub fn compile(mut ast: Program) -> VMProgram {
     codegen(ast, program_data)
 }
 
-pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
+pub fn codegen(ast: Program, data: ProgramData) -> VMProgram {
     let mut program = VMProgram::new();
     program.data = data;
 
@@ -33,13 +33,16 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
             },
         );
 
-        // TODO: Bruh bruh bruh fix
-        static_section += 12;
+        static_section += i.type_kind.size();
     }
 
     for f in ast.functions.iter() {
         let mut fnc = {
-            let mut fnc = program.data.functions.get_mut(f.ident.item.as_str()).unwrap();
+            let mut fnc = program
+                .data
+                .functions
+                .get_mut(f.ident.item.as_str())
+                .unwrap();
             fnc.address = Some(program.code.len());
 
             fnc.stack_offset = fnc.param_types.iter().map(|t| t.size()).sum();
@@ -47,9 +50,13 @@ pub fn codegen(ast: Program, mut data: ProgramData) -> VMProgram {
         };
 
         for s in f.statements.iter() {
-            generate_statement(&mut program, &ast, &mut fnc, s);       
+            generate_statement(&mut program, &ast, &mut fnc, s);
         }
-        *program.data.functions.get_mut(f.ident.item.as_str()).unwrap() = fnc;
+        *program
+            .data
+            .functions
+            .get_mut(f.ident.item.as_str())
+            .unwrap() = fnc;
     }
 
     program.data.static_section_size = static_section;
@@ -83,26 +90,26 @@ pub fn generate_statement(
             generate_expr(program, &ast, fnc, &expr);
 
             if let Some(o) = program.data.global_symbols.get(&i.item) {
-				let size = o.type_kind.size() / 4;
+                let size = o.type_kind.size() / 4;
 
-				for i in 1..=size {
-					program.code.push(MemoryCell::with_data(
-						OpCode::Mov4Global,
-						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
-					));
-				}
+                for i in 1..=size {
+                    program.code.push(MemoryCell::with_data(
+                        OpCode::Mov4Global,
+                        (o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+                    ));
+                }
             } else if let Some(o) = fnc.symbols.get(&i.item) {
-				let size = o.type_kind.size() / 4;
+                let size = o.type_kind.size() / 4;
 
-				for i in 1..=size {
-					program.code.push(MemoryCell::with_data(
-						OpCode::Mov4,
-						(o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
-					));
-				}
-			} else {
+                for i in 1..=size {
+                    program.code.push(MemoryCell::with_data(
+                        OpCode::Mov4,
+                        (o.stack_offset.unwrap() + ((size - i) * 4)) as u16,
+                    ));
+                }
+            } else {
                 panic!("[ICE: Assignment to unknown symbol after typechecking]");
-			}
+            }
 
             program.code.push(MemoryCell::with_data(
                 OpCode::StmtMarker,
@@ -116,9 +123,10 @@ pub fn generate_statement(
                 OpCode::StmtMarker,
                 span.from.line as u16,
             ));
-            program
-                .code
-                .push(MemoryCell::with_data(OpCode::Ret, expr.expect_typekind().size() as u16));
+            program.code.push(MemoryCell::with_data(
+                OpCode::Ret,
+                expr.expect_typekind().size() as u16,
+            ));
         }
         Statement::Conditional(cond) => {
             fn generate_conditional_branch(
@@ -156,16 +164,28 @@ pub fn generate_statement(
                 panic!("Don't use a global in a loop");
             } else {
                 // loop index var
-                fnc.symbols.get_mut(ident.item.as_str()).unwrap().stack_offset = Some(fnc.stack_offset);
+                fnc.symbols
+                    .get_mut(ident.item.as_str())
+                    .unwrap()
+                    .stack_offset = Some(fnc.stack_offset);
                 let iter_offset = fnc.stack_offset;
                 fnc.stack_offset += from.typekind().unwrap().size();
 
                 // condition
                 let cond = program.code.len();
-                program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
                 generate_expr(program, ast, fnc, to);
-                let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
-                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));
+                let cmp_fn = crate::builtins::get_builtin_fn(
+                    "__op_binary_less",
+                    &[TypeKind::I32, TypeKind::I32],
+                )
+                .unwrap()
+                .0;
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::CallBuiltIn, cmp_fn as u16));
 
                 program.code.push(MemoryCell::with_data(
                     OpCode::StmtMarker,
@@ -183,16 +203,30 @@ pub fn generate_statement(
                 // incr loop index
                 program.code.push(MemoryCell::plain_inst(OpCode::Const4));
                 program.code.push(MemoryCell::raw(1));
-                program.code.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
-                let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32]).unwrap().0;
-                program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, incr_fn as u16));
-                program.code.push(MemoryCell::with_data(OpCode::Mov4, iter_offset as u16));
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
+                let incr_fn = crate::builtins::get_builtin_fn(
+                    "__op_binary_add",
+                    &[TypeKind::I32, TypeKind::I32],
+                )
+                .unwrap()
+                .0;
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::CallBuiltIn, incr_fn as u16));
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::Mov4, iter_offset as u16));
 
                 // jump to condition
-                program.code.push(MemoryCell::with_data(OpCode::Jmp, cond as u16));
+                program
+                    .code
+                    .push(MemoryCell::with_data(OpCode::Jmp, cond as u16));
 
                 // end label
-                program.code[jmp] = MemoryCell::with_data(OpCode::JmpZero, program.code.len() as u16);
+                program.code[jmp] =
+                    MemoryCell::with_data(OpCode::JmpZero, program.code.len() as u16);
             }
         }
     };
@@ -219,7 +253,9 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                     OpCode::Call,
                     func.address.unwrap() as u16,
                 ));
-                program.code.push(MemoryCell::raw(func.param_types.iter().map(|t| t.size() as u32).sum()));
+                program.code.push(MemoryCell::raw(
+                    func.param_types.iter().map(|t| t.size() as u32).sum(),
+                ));
             } else {
                 panic!("Unrecognized function: {:?}: ({:?})", id, arg_types);
             }
@@ -264,6 +300,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                 ))
             }
         }
-        Expr::Grouped(e) => generate_expr(program, ast, fnc, e)
+        Expr::Grouped(e) => generate_expr(program, ast, fnc, e),
     }
 }

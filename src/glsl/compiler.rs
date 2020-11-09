@@ -68,7 +68,10 @@ impl GenerateGLSL {
             .collect::<Vec<String>>()
             .join(", ");
 
-        let func_text = format!("{} {}({}) {{\n{}\n}}\n", glsl_type, func_ident, func_params, func_body);
+        let func_text = format!(
+            "{} {}({}) {{\n{}\n}}\n",
+            glsl_type, func_ident, func_params, func_body
+        );
 
         self.functions.push((func_ident, func_text));
     }

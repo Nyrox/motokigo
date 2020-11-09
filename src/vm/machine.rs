@@ -127,9 +127,7 @@ impl<'a> VirtualMachine<'a> {
                         stack_base: self.stack_base,
                     });
 
-                    unsafe {
-                        self.stack_base = self.stack.len() - self.program.code[self.isp].data as usize;
-                    }
+                    self.stack_base = self.stack.len() - self.program.code[self.isp].data as usize;
                     self.isp = p as usize;
                 }
                 OpCode::JmpZero => {
@@ -171,7 +169,7 @@ impl<'a> VirtualMachine<'a> {
                     self.push_stack_raw(std::mem::transmute(val));
                 },
                 OpCode::Void => self.push_stack_raw(0),
-                OpCode::Ret => unsafe {
+                OpCode::Ret => {
                     // we need to figure out the amount of bytes to buffer
                     // as the return value. we can retrieve this by seeing how many
                     // bytes the vm has on it's current stack frame, compared to the
@@ -188,13 +186,15 @@ impl<'a> VirtualMachine<'a> {
 
                     self.push_bytes(&rv);
 
-                    if let Some(sf) = self.call_stack.pop() { // ret
+                    if let Some(sf) = self.call_stack.pop() {
+                        // ret
                         self.stack_base = sf.stack_base;
                         self.isp = sf.return_addr;
-                    } else { // returned from main
+                    } else {
+                        // returned from main
                         return VMState::VMRunFinished(VMRunFinishedState(self));
                     }
-                },
+                }
                 o => unimplemented!("{:?}", o),
             }
         }

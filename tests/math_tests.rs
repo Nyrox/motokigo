@@ -1,8 +1,3 @@
-
-
-
-
-
 // "
 // in Float a;
 // in Float b;
@@ -14,7 +9,7 @@
 
 const TEST_ITERATIONS: usize = 50;
 
-use motokigo::{parser, compiler, glsl, vm::VMState};
+use motokigo::{compiler, glsl, parser, vm::VMState};
 
 macro_rules! generate_basic_op_test {
     ($name: ident, $tl: expr, $tr: ty, $op: expr, $opr:expr, $epsilon: expr) => {
@@ -63,10 +58,38 @@ macro_rules! generate_basic_op_test {
 const EPSILON_F32: f32 = 0.000001;
 const EPSILON_I32: i32 = 0;
 
-generate_basic_op_test!(add_float, "Float", f32, "+", std::ops::Add::add, EPSILON_F32);
-generate_basic_op_test!(sub_float, "Float", f32, "-", std::ops::Sub::sub, EPSILON_F32);
-generate_basic_op_test!(mul_float, "Float", f32, "*", std::ops::Mul::mul, EPSILON_F32);
-generate_basic_op_test!(div_float, "Float", f32, "/", std::ops::Div::div, EPSILON_F32);
+generate_basic_op_test!(
+    add_float,
+    "Float",
+    f32,
+    "+",
+    std::ops::Add::add,
+    EPSILON_F32
+);
+generate_basic_op_test!(
+    sub_float,
+    "Float",
+    f32,
+    "-",
+    std::ops::Sub::sub,
+    EPSILON_F32
+);
+generate_basic_op_test!(
+    mul_float,
+    "Float",
+    f32,
+    "*",
+    std::ops::Mul::mul,
+    EPSILON_F32
+);
+generate_basic_op_test!(
+    div_float,
+    "Float",
+    f32,
+    "/",
+    std::ops::Div::div,
+    EPSILON_F32
+);
 
 generate_basic_op_test!(add_int, "Int", i32, "+", i32::wrapping_add, EPSILON_I32);
 generate_basic_op_test!(sub_int, "Int", i32, "-", i32::wrapping_sub, EPSILON_I32);

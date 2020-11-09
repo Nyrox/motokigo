@@ -16,7 +16,7 @@ pub struct FuncMeta {
     pub address: Option<usize>,
     pub stack_offset: usize,
     pub return_type: Option<TypeKind>,
-    pub param_types: Vec<TypeKind>
+    pub param_types: Vec<TypeKind>,
 }
 
 impl FuncMeta {

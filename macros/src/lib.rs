@@ -1,4 +1,4 @@
-use proc_macro2::{TokenStream};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::*;
 
@@ -136,7 +136,7 @@ pub fn generate_builtin_fn(
             fn vm_impl(&self, vm: &mut VirtualMachine) {
                 #(#args)*
 
-				#func;
+                #func;
 
                 let rv = __impl(#(#call_args),*);
 

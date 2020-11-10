@@ -17,6 +17,9 @@ pub trait Visitor {
 	fn symbol(&mut self, _t: &mut Symbol) -> VResult {
 		Ok(())
 	}
+	fn struct_declaration(&mut self, _t: &mut StructDeclaration) -> VResult {
+		Ok(())
+	}
 	fn function_decl(&mut self, _t: &mut FunctionDeclaration) -> VResult {
 		Ok(())
 	}
@@ -50,11 +53,27 @@ pub struct Position {
 	pub offset: Option<u32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Spanned<T> {
 	pub item: T,
 	pub from: Position,
 	pub to: Position,
+}
+
+impl<T> std::fmt::Debug for Spanned<T>
+where
+	T: std::fmt::Debug,
+{
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_fmt(format_args!(
+			"Span [{}:{}, {}:{}], Item: {:?}",
+			self.from.line,
+			self.from.offset.unwrap_or_default(),
+			self.to.line,
+			self.to.offset.unwrap_or_default(),
+			self.item
+		))
+	}
 }
 
 impl<T: Copy> Copy for Spanned<T> {}
@@ -84,13 +103,19 @@ impl<T> Spanned<T> {
 	}
 }
 
-use std::ops::Deref;
+use std::ops::{DerefMut, Deref};
 
 impl<T> Deref for Spanned<T> {
 	type Target = T;
 
 	fn deref(&self) -> &Self::Target {
 		&self.item
+	}
+}
+
+impl<T> DerefMut for Spanned<T> {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.item
 	}
 }
 
@@ -321,15 +346,35 @@ impl Visitable for InParameterDeclaration {
 }
 
 #[derive(Clone, Debug)]
+pub struct StructDeclaration {
+	pub ident: Spanned<Ident>,
+	pub members: Vec<(Spanned<Ident>, Spanned<TypeKind>)>,
+}
+
+impl Visitable for StructDeclaration {
+	fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
+		self
+			.members
+			.iter_mut()
+			.map(|(_, t)| v.type_kind(t))
+			.collect::<Result<_, _>>()?;
+
+		v.struct_declaration(self)
+	}
+}
+
+#[derive(Clone, Debug)]
 pub struct Program {
 	pub functions: Vec<FunctionDeclaration>,
 	pub in_parameters: Vec<InParameterDeclaration>,
+	pub struct_declarations: Vec<StructDeclaration>,
 }
 
 impl Program {
 	pub fn new() -> Self {
 		Program {
 			functions: Vec::new(),
+			struct_declarations: Vec::new(),
 			in_parameters: Vec::new(),
 		}
 	}
@@ -342,6 +387,7 @@ impl Program {
 impl Visitable for Program {
 	fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
 		(|| {
+			self.struct_declarations.visit(v)?;
 			self.in_parameters.visit(v)?;
 			self.functions.visit(v)
 		})()?;

@@ -111,6 +111,31 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 				program.in_parameters.push(InParameterDeclaration { type_kind, ident });
 				continue;
 			}
+			Token::Struct => {
+				tokens.expect_token(Token::Struct)?;
+				let ident = tokens.expect_identifier()?;
+
+				tokens.expect_token(Token::LeftBrace)?;
+
+				let mut members = Vec::new();
+				loop {
+					let tk = tokens.expect_typekind()?;
+					let field_ident = tokens.expect_identifier()?;
+
+					members.push((field_ident, tk));
+
+					if tokens.maybe_expect(Token::Comma).is_none() {
+						tokens.expect_token(Token::RightBrace)?;
+						break;
+					}
+					if tokens.maybe_expect(Token::RightBrace).is_some() {
+						break;
+					}
+				}
+
+
+				program.struct_declarations.push(StructDeclaration { ident, members })
+			}
 			// func declarations
 			_ => {
 				let tk = tokens.expect_typekind()?;

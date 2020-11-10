@@ -11,6 +11,7 @@ pub enum Token {
 	For,
 	To,
 
+	Struct,
 	Int,
 	Float,
 	LeftParen,
@@ -29,6 +30,7 @@ pub enum Token {
 	LessEq,
 	Greater,
 	GreaterEq,
+	Dot,
 
 	Void,
 	Return,
@@ -117,6 +119,7 @@ impl<I: Iterator<Item = char>> Scanner<I> {
 			"else" => Some(Token::Else),
 			"for" => Some(Token::For),
 			"to" => Some(Token::To),
+			"struct" => Some(Token::Struct),
 			_ => None,
 		}
 	}
@@ -160,6 +163,7 @@ impl<I: Iterator<Item = char>> Scanner<I> {
 			},
 			'*' => tok(Token::Star),
 			',' => tok(Token::Comma),
+			'.' => tok(Token::Dot),
 			'<' if peeked == Some('=') => {
 				self.advance();
 				tok(Token::LessEq)

@@ -261,5 +261,13 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 			}
 		}
 		Expr::Grouped(e) => generate_expr(program, ast, fnc, e),
+		Expr::FieldAccess(s, f, t) => {
+			t.as_ref().unwrap();
+			unimplemented!()
+		}
+		Expr::StructConstruction(tk, fields) => {
+			
+			unimplemented!()
+		}
 	}
 }

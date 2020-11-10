@@ -101,6 +101,10 @@ impl<T> Spanned<T> {
 			item: f(&self.item),
 		}
 	}
+
+	pub fn just_span(&self) -> Spanned<()> {
+		self.map(|_| ())
+	}
 }
 
 use std::ops::{DerefMut, Deref};
@@ -215,6 +219,8 @@ pub enum Expr {
 	FuncCall(FuncCall),
 	Literal(Spanned<Literal>),
 	Symbol(Symbol),
+	FieldAccess(Symbol, Spanned<Ident>, Option<TypeKind>),
+	StructConstruction(Spanned<TypeKind>, Vec<(Spanned<Ident>, Box<Expr>)>),
 	Grouped(Box<Expr>),
 }
 
@@ -223,6 +229,8 @@ impl Expr {
 		match self {
 			Expr::FuncCall((def, _)) => def.resolved.clone().map(|(_, tk)| tk),
 			Expr::Symbol(s) => s.resolved.clone().map(|(_, tk)| tk),
+			Expr::FieldAccess(_, _, tk) => tk.clone(),
+			Expr::StructConstruction(tk, _) => Some(tk.item.clone()),
 			Expr::Literal(l) => match l.item {
 				Literal::DecimalLiteral(_) => Some(TypeKind::F32),
 				Literal::IntegerLiteral(_) => Some(TypeKind::I32),
@@ -241,6 +249,8 @@ impl Expr {
 			Self::FuncCall(fc) => fc.0.raw.map(|_| ()),
 			Self::Literal(lit) => lit.map(|_| ()),
 			Self::Symbol(sym) => sym.raw.map(|_| ()),
+			Self::FieldAccess(sym, i, _) => Spanned::encompass((), sym.raw.just_span(), i.just_span()),
+			Self::StructConstruction(tk, _) => tk.just_span(),
 			Self::Grouped(e) => e.span(),
 		}
 	}
@@ -256,8 +266,17 @@ impl Visitable for Expr {
 				v.post_func_call(func)?;
 			}
 			Expr::Symbol(s) => s.visit(v)?,
-			Expr::Grouped(e) => e.visit(v)?,
+			Expr::FieldAccess(s, _, _) => {
+				s.visit(v)?;
+			}
+			Expr::StructConstruction(tk, fields) => {
+				v.type_kind(tk)?;
+				for (_, e) in fields {
+					e.visit(v)?;
+				}
+			}
 			Expr::Literal(_) => (),
+			Expr::Grouped(e) => e.visit(v)?,
 		}
 
 		v.post_expr(self)

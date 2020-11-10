@@ -319,6 +319,35 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 
 				Expr::FuncCall((Reference::unresolved(token.map(|_| i.clone())), exprs))
 			}
+			Some(t) if t.item == Token::LeftBrace => {
+				lexer.next();
+
+				let mut fields = Vec::new();
+				loop {
+					let i = lexer.expect_identifier()?;
+					lexer.expect_token(Token::Equals)?;
+					let rhs = parse_expr_bp(lexer, 0)?;
+
+					fields.push((i, Box::new(rhs)));
+
+					if lexer.maybe_expect(Token::Comma).is_none() {
+						lexer.expect_token(Token::RightBrace)?;
+						break;
+					}
+					if lexer.maybe_expect(Token::RightBrace).is_some() {
+						break;
+					}
+				}
+
+				Expr::StructConstruction(token.map(|_| TypeKind::TypeRef(i.clone())), fields)
+			}
+			Some(t) if t.item == Token::Dot => {
+				lexer.next();
+
+				let field = lexer.expect_identifier()?;
+
+				Expr::FieldAccess(Reference::unresolved(token.map(|_| i.clone())), field, None)
+			}
 			_ => Expr::Symbol(Reference::unresolved(token.map(|_| i.clone()))),
 		},
 		Token::LeftParen => {

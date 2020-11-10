@@ -15,7 +15,7 @@ macro_rules! generate_basic_op_test {
     ($name: ident, $tl: expr, $tr: ty, $op: expr, $opr:expr, $epsilon: expr) => {
         paste::item! {
             #[test]
-            pub fn [<test_basic_op_ $name>]() {
+            pub fn [<basic_op_ $name>]() {
                 let test_source = format!(r"
                     in {t} a
                     in {t} b

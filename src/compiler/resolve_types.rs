@@ -180,7 +180,19 @@ impl<'a> Visitor for ResolveTypes<'a> {
                     Err(Box::new(TypeError::UnknownSymbol(ident.clone())))?;
                 }
             }
-            Statement::Return(_, _) => {}
+            Statement::Return(_, rhs) => {
+                let scope = self.current_scope();
+
+                if &rhs.typekind() != &scope.return_type {
+                    return Err(Box::new(TypeError::TypeError(
+                        rhs.span().map(|_| {
+                            String::from("Return type does not match type of return expression")
+                        }),
+                        rhs.expect_typekind(),
+                        scope.return_type.clone().unwrap(),
+                    )));
+                }
+            }
             Statement::Conditional(conditional) => {
                 let c = conditional.cond.as_ref().unwrap();
                 match c.expect_typekind() {
@@ -229,6 +241,19 @@ impl<'a> Visitor for ResolveTypes<'a> {
             func.0.resolved = Some((func.0.raw.item.clone(), builtin.return_type()));
             Ok(())
         } else if let Some(f) = self.program_data.functions.get(func.0.raw.as_str()) {
+            // TODO: Implement function overloading in user land
+            if false
+                == arg_types
+                    .iter()
+                    .zip(f.param_types.iter())
+                    .fold(true, |acc, (a, b)| acc && a == b)
+            {
+                Err(Box::new(TypeError::UnknownFunction(
+                    func.0.raw.clone(),
+                    arg_types,
+                )))?
+            }
+
             func.0.resolved = Some((func.0.raw.item.clone(), f.return_type.clone().unwrap()));
             Ok(())
         } else {

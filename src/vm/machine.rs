@@ -37,8 +37,9 @@ const INITIAL_STACK_CAPACITY: usize = 128; // should be large enough?
 
 impl<'a> VirtualMachine<'a> {
     pub fn new(program: &'a VMProgram) -> VirtualMachine<'a> {
-		let mut stack =  Vec::with_capacity(program.data.static_section_size + INITIAL_STACK_CAPACITY);
-		stack.resize(program.data.static_section_size, 0);
+        let mut stack =
+            Vec::with_capacity(program.data.static_section_size + INITIAL_STACK_CAPACITY);
+        stack.resize(program.data.static_section_size, 0);
 
         VirtualMachine {
             program,
@@ -247,7 +248,7 @@ impl<'a> VirtualMachine<'a> {
             .offset((self.stack.len() - mem::size_of::<T>()) as isize);
         let v = *(ptr as *const T);
 
-		self.stack.resize(self.stack.len() - mem::size_of::<T>(), 0);
+        self.stack.resize(self.stack.len() - mem::size_of::<T>(), 0);
         v
     }
 }

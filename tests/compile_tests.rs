@@ -7,28 +7,28 @@ macro_rules! should_fail_compilation {
 			#[should_panic]
 			pub fn [<fail_compile_ $sn>]() {
 				let mut program = parser::parse($source).unwrap();
-                compiler::resolve_types::resolve(&mut program, &mut compiler::program_data::ProgramData::new()).unwrap();
+				compiler::resolve_types::resolve(&mut program, &mut compiler::program_data::ProgramData::new()).unwrap();
 
-                // check that glsl compiler atleast works
-                glsl::generate_glsl(program.clone());
+				// check that glsl compiler atleast works
+				glsl::generate_glsl(program.clone());
 
-                compiler::compile(program);
+				compiler::compile(program);
 			}
 		}
-	}
+	};
 }
 
 should_fail_compilation!(
-    wrong_return_type,
-    r"
+	wrong_return_type,
+	r"
 Float main() {
 	return 5
 }"
 );
 
 should_fail_compilation!(
-    wrong_param_types,
-    r"
+	wrong_param_types,
+	r"
 Float foo(Float a) {
 	return a
 }
@@ -39,17 +39,23 @@ Float main() {
 "
 );
 
-should_fail_compilation!(assignment_to_immutable, r"
+should_fail_compilation!(
+	assignment_to_immutable,
+	r"
 Float main() {
 	let a = 0.0
 	a = 1.0
 	return 1.0
-}");
+}"
+);
 
-should_fail_compilation!(assignment_type_mismatch, r"
+should_fail_compilation!(
+	assignment_type_mismatch,
+	r"
 Float main() {
 	let mut a = 1
 	a = 1.0
 	return 1.0
 }
-");
+"
+);

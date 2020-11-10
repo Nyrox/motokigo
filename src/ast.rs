@@ -1,6 +1,6 @@
 pub type Ident = String;
 
-use std::fmt;
+use std::{cell::RefCell, fmt, rc::Rc};
 
 pub type VResult = Result<(), Box<dyn std::error::Error>>;
 
@@ -47,13 +47,13 @@ impl<T: Visitable> Visitable for Vec<T> {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Position {
 	pub line: u32,
 	pub offset: Option<u32>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Spanned<T> {
 	pub item: T,
 	pub from: Position,
@@ -83,6 +83,14 @@ impl<T> Spanned<T> {
 		Spanned { item, from, to }
 	}
 
+	pub fn empty() -> Spanned<()> {
+		Spanned {
+			item: (),
+			from: Position { line: 0, offset: None },
+			to: Position { line: 0, offset: None },
+		}
+	}
+
 	pub fn encompass<A, B>(item: T, s1: Spanned<A>, s2: Spanned<B>) -> Spanned<T> {
 		Spanned {
 			item,
@@ -107,7 +115,7 @@ impl<T> Spanned<T> {
 	}
 }
 
-use std::ops::{DerefMut, Deref};
+use std::ops::{Deref, DerefMut};
 
 impl<T> Deref for Spanned<T> {
 	type Target = T;
@@ -166,14 +174,31 @@ impl Literal {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum TypeKind {
 	Void,
 	I32,
 	F32,
-	TypeRef(String),
+	TypeRef(Spanned<Ident>),
 	Vector(Box<TypeKind>, usize),
 	Matrix(Box<TypeKind>, usize, usize),
+	Struct(Rc<RefCell<StructDeclaration>>),
+}
+
+impl std::cmp::PartialEq for TypeKind {
+	fn eq(&self, other: &Self) -> bool {
+		use TypeKind::*;
+
+		match (self, other) {
+			(I32, I32) => true,
+			(F32, F32) => true,
+			(TypeRef(a), TypeRef(b)) => a == b,
+			(Vector(ta, na), Vector(tb, nb)) => ta == tb && na == nb,
+			(Matrix(ta, na, ma), Matrix(tb, nb, mb)) => ta == tb && na == nb && ma == mb,
+			(Struct(a), Struct(b)) => a.borrow().ident == b.borrow().ident,
+			_ => false,
+		}
+	}
 }
 
 impl TypeKind {
@@ -184,6 +209,7 @@ impl TypeKind {
 			TypeKind::F32 => 4,
 			TypeKind::Vector(type_kind, size) => type_kind.size() * size,
 			TypeKind::Matrix(type_kind, m, n) => type_kind.size() * m * n,
+			TypeKind::Struct(s) => s.borrow().size.unwrap(),
 			_ => unimplemented!("{:?}", self),
 		}
 	}
@@ -220,7 +246,7 @@ pub enum Expr {
 	Literal(Spanned<Literal>),
 	Symbol(Symbol),
 	FieldAccess(Symbol, Spanned<Ident>, Option<TypeKind>),
-	StructConstruction(Spanned<TypeKind>, Vec<(Spanned<Ident>, Box<Expr>)>),
+	StructConstruction(TypeKind, Vec<(Spanned<Ident>, Box<Expr>)>),
 	Grouped(Box<Expr>),
 }
 
@@ -230,7 +256,7 @@ impl Expr {
 			Expr::FuncCall((def, _)) => def.resolved.clone().map(|(_, tk)| tk),
 			Expr::Symbol(s) => s.resolved.clone().map(|(_, tk)| tk),
 			Expr::FieldAccess(_, _, tk) => tk.clone(),
-			Expr::StructConstruction(tk, _) => Some(tk.item.clone()),
+			Expr::StructConstruction(tk, _) => Some(tk.clone()),
 			Expr::Literal(l) => match l.item {
 				Literal::DecimalLiteral(_) => Some(TypeKind::F32),
 				Literal::IntegerLiteral(_) => Some(TypeKind::I32),
@@ -250,7 +276,7 @@ impl Expr {
 			Self::Literal(lit) => lit.map(|_| ()),
 			Self::Symbol(sym) => sym.raw.map(|_| ()),
 			Self::FieldAccess(sym, i, _) => Spanned::encompass((), sym.raw.just_span(), i.just_span()),
-			Self::StructConstruction(tk, _) => tk.just_span(),
+			Self::StructConstruction(tk, _) => Spanned::<()>::empty(),
 			Self::Grouped(e) => e.span(),
 		}
 	}
@@ -368,12 +394,12 @@ impl Visitable for InParameterDeclaration {
 pub struct StructDeclaration {
 	pub ident: Spanned<Ident>,
 	pub members: Vec<(Spanned<Ident>, Spanned<TypeKind>)>,
+	pub size: Option<usize>,
 }
 
 impl Visitable for StructDeclaration {
 	fn visit(&mut self, v: &mut dyn Visitor) -> VResult {
-		self
-			.members
+		self.members
 			.iter_mut()
 			.map(|(_, t)| v.type_kind(t))
 			.collect::<Result<_, _>>()?;

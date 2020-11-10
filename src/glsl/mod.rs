@@ -20,6 +20,7 @@ fn get_glsl_type(tk: &TypeKind) -> String {
 			}
 		}
 		TypeKind::Void => "void".to_owned(),
+		TypeKind::Struct(s) => s.borrow().ident.item.clone(),
 		t => {
 			dbg!(t);
 			unimplemented!()

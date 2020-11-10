@@ -265,9 +265,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 			t.as_ref().unwrap();
 			unimplemented!()
 		}
-		Expr::StructConstruction(tk, fields) => {
-			
-			unimplemented!()
-		}
+		Expr::StructConstruction(tk, fields) => unimplemented!(),
 	}
 }

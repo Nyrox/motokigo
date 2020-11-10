@@ -61,7 +61,7 @@ pub trait TokenSource {
 			Token::Float => Ok(TypeKind::F32),
 			Token::Int => Ok(TypeKind::I32),
 			Token::Void => Ok(TypeKind::Void),
-			Token::Identifier(i) => Ok(TypeKind::TypeRef(i.clone())),
+			Token::Identifier(i) => Ok(TypeKind::TypeRef(token.map(|_| i.clone()))),
 			t => Err(ParsingError::UnexpectedToken(token.map(|_| t.clone()))),
 		});
 
@@ -133,8 +133,11 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 					}
 				}
 
-
-				program.struct_declarations.push(StructDeclaration { ident, members })
+				program.struct_declarations.push(StructDeclaration {
+					ident,
+					members,
+					size: None,
+				})
 			}
 			// func declarations
 			_ => {
@@ -339,7 +342,7 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 					}
 				}
 
-				Expr::StructConstruction(token.map(|_| TypeKind::TypeRef(i.clone())), fields)
+				Expr::StructConstruction(TypeKind::TypeRef(token.map(|_| i.clone())), fields)
 			}
 			Some(t) if t.item == Token::Dot => {
 				lexer.next();

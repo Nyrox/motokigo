@@ -166,14 +166,10 @@ impl GenerateGLSL {
 					format!("{}({})", f.raw.clone().item, args.join(", "))
 				}
 			}
-			Expr::FieldAccess(s, f, _) => {
-				format!("{}.{}", s.resolved.clone().unwrap().0, f.item.clone())
-			}
+			Expr::FieldAccess(s, f, _) => format!("{}.{}", s.resolved.clone().unwrap().0, f.item.clone()),
 			Expr::Literal(l) => l.to_string(),
 			Expr::Grouped(e) => format!("({})", self.generate_expr(e)),
-			Expr::StructConstruction(tk, fields) => {
-				unimplemented!()
-			}
+			Expr::StructConstruction(tk, fields) => format!("oh god oh fuck"),
 		}
 	}
 

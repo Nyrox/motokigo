@@ -1,6 +1,7 @@
 use crate::ast::TypeKind;
 
-use std::collections::HashMap;
+use crate::ast::StructDeclaration;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 #[derive(Clone, Debug)]
 pub struct SymbolMeta {
@@ -35,6 +36,7 @@ impl FuncMeta {
 pub struct ProgramData {
 	pub functions: HashMap<String, FuncMeta>,
 	pub global_symbols: HashMap<String, SymbolMeta>,
+	pub struct_declarations: HashMap<String, Rc<RefCell<StructDeclaration>>>,
 	pub static_section_size: usize,
 }
 
@@ -43,6 +45,7 @@ impl ProgramData {
 		ProgramData {
 			functions: HashMap::new(),
 			global_symbols: HashMap::new(),
+			struct_declarations: HashMap::new(),
 			static_section_size: 0,
 		}
 	}

@@ -24,9 +24,11 @@ pub enum TypeError {
 	UnknownFunction(Spanned<Ident>, Vec<TypeKind>),
 	AssignmentToImmutable(Spanned<Ident>),
 	TypeError(Spanned<Ident>, TypeKind, TypeKind),
+	UnknownType(Spanned<Ident>),
+	GenericError(String), // For now
 }
 
-use std::{error, fmt};
+use std::{cell::RefCell, error, fmt, rc::Rc};
 
 impl fmt::Display for TypeError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -67,10 +69,14 @@ impl<'a> Visitor for ResolveTypes<'a> {
 							*tk = TypeKind::Matrix(Box::new(TypeKind::F32), m as usize, m as usize);
 						}
 					}
-				} else if name == "Float" {
+				} else if &name.item == "Float" {
 					*tk = TypeKind::F32;
-				} else if name == "Int" {
+				} else if &name.item == "Int" {
 					*tk = TypeKind::I32;
+				} else if let Some(s) = self.program_data.struct_declarations.get(&name.item) {
+					*tk = TypeKind::Struct(s.clone());
+				} else {
+					Err(Box::new(TypeError::UnknownType(name.clone())))?;
 				}
 
 				Ok(())
@@ -90,6 +96,14 @@ impl<'a> Visitor for ResolveTypes<'a> {
 		} else {
 			Err(Box::new(TypeError::UnknownSymbol(s.raw.clone())))?;
 		}
+		Ok(())
+	}
+
+	fn struct_declaration(&mut self, s: &mut StructDeclaration) -> VResult {
+		self.program_data
+			.struct_declarations
+			.insert(s.ident.item.clone(), Rc::new(RefCell::new(s.clone())));
+
 		Ok(())
 	}
 
@@ -248,6 +262,35 @@ impl<'a> Visitor for ResolveTypes<'a> {
 		} else {
 			Err(Box::new(TypeError::UnknownFunction(func.0.raw.clone(), arg_types)))
 		}
+	}
+
+	fn post_expr(&mut self, e: &mut Expr) -> VResult {
+		match e {
+			Expr::FieldAccess(s, f, t) => match &s.resolved.as_ref().unwrap().1 {
+				TypeKind::Struct(s) => {
+					let s = s.borrow();
+					if let Some(field) = s.members.iter().find(|(mn, _)| &mn.item == &f.item) {
+						*t = Some(field.1.item.clone());
+					} else {
+						Err(Box::new(TypeError::GenericError(format!(
+							"Field {:?} does not exist on struct {:?}",
+							f, s.ident
+						))))?;
+					}
+				}
+				_ => Err(Box::new(TypeError::GenericError(format!(
+					"Field access on type {:?} is not valid",
+					s.resolved.as_ref().unwrap().1.clone()
+				))))?,
+			},
+			Expr::FuncCall(_) => {}
+			Expr::Grouped(_) => {}
+			Expr::Literal(_) => {}
+			Expr::StructConstruction(_, _) => {}
+			Expr::Symbol(_) => {}
+		}
+
+		Ok(())
 	}
 
 	fn post_in_parameter(&mut self, param: &mut InParameterDeclaration) -> VResult {

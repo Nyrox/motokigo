@@ -33,14 +33,19 @@ pub struct VirtualMachine<'a> {
     pub breakpoints: Vec<u16>,
 }
 
+const INITIAL_STACK_CAPACITY: usize = 128; // should be large enough?
+
 impl<'a> VirtualMachine<'a> {
     pub fn new(program: &'a VMProgram) -> VirtualMachine<'a> {
+		let mut stack =  Vec::with_capacity(program.data.static_section_size + INITIAL_STACK_CAPACITY);
+		stack.resize(program.data.static_section_size, 0);
+
         VirtualMachine {
             program,
-            stack: vec![0; program.data.min_stack_size],
+            stack,
             isp: 0,
-            call_stack: Vec::new(),
-            stack_base: 0,
+            call_stack: Vec::with_capacity(8), // should always be enough
+            stack_base: program.data.static_section_size,
             breakpoints: vec![],
         }
     }
@@ -242,7 +247,7 @@ impl<'a> VirtualMachine<'a> {
             .offset((self.stack.len() - mem::size_of::<T>()) as isize);
         let v = *(ptr as *const T);
 
-        let _ = self.stack.split_off(self.stack.len() - mem::size_of::<T>());
+		self.stack.resize(self.stack.len() - mem::size_of::<T>(), 0);
         v
     }
 }

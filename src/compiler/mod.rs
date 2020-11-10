@@ -58,7 +58,6 @@ pub fn codegen(ast: Program, data: ProgramData) -> VMProgram {
     }
 
     program.data.static_section_size = static_section;
-    program.data.min_stack_size = static_section + 1024;
     program
 }
 

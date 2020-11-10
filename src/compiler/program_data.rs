@@ -35,7 +35,6 @@ impl FuncMeta {
 pub struct ProgramData {
     pub functions: HashMap<String, FuncMeta>,
     pub global_symbols: HashMap<String, SymbolMeta>,
-    pub min_stack_size: usize,
     pub static_section_size: usize,
 }
 
@@ -44,7 +43,6 @@ impl ProgramData {
         ProgramData {
             functions: HashMap::new(),
             global_symbols: HashMap::new(),
-            min_stack_size: 0,
             static_section_size: 0,
         }
     }

@@ -100,6 +100,8 @@ impl<'a> Visitor for ResolveTypes<'a> {
 	}
 
 	fn struct_declaration(&mut self, s: &mut StructDeclaration) -> VResult {
+		s.size = Some(s.members.iter().map(|(_, tk)| tk.size()).sum());
+
 		self.program_data
 			.struct_declarations
 			.insert(s.ident.item.clone(), Rc::new(RefCell::new(s.clone())));
@@ -266,11 +268,17 @@ impl<'a> Visitor for ResolveTypes<'a> {
 
 	fn post_expr(&mut self, e: &mut Expr) -> VResult {
 		match e {
-			Expr::FieldAccess(s, f, t) => match &s.resolved.as_ref().unwrap().1 {
+			Expr::FieldAccess(s, f, t, so) => match &s.resolved.as_ref().unwrap().1 {
 				TypeKind::Struct(s) => {
 					let s = s.borrow();
 					if let Some(field) = s.members.iter().find(|(mn, _)| &mn.item == &f.item) {
 						*t = Some(field.1.item.clone());
+						*so = Some(
+							s.members
+								.iter()
+								.map_while(|(n, tk)| (&n.item != &f.item).then_some(tk.size()))
+								.sum(),
+						);
 					} else {
 						Err(Box::new(TypeError::GenericError(format!(
 							"Field {:?} does not exist on struct {:?}",
@@ -286,7 +294,13 @@ impl<'a> Visitor for ResolveTypes<'a> {
 			Expr::FuncCall(_) => {}
 			Expr::Grouped(_) => {}
 			Expr::Literal(_) => {}
-			Expr::StructConstruction(_, _) => {}
+			Expr::StructConstruction(name, s, _) => {
+				if let Some(newt) = self.program_data.struct_declarations.get(&name.item) {
+					*s = Some(newt.clone());
+				} else {
+					Err(TypeError::UnknownType(name.clone()))?;
+				}
+			}
 			Expr::Symbol(_) => {}
 		}
 

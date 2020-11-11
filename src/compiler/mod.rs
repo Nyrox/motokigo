@@ -261,10 +261,23 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 			}
 		}
 		Expr::Grouped(e) => generate_expr(program, ast, fnc, e),
-		Expr::FieldAccess(s, f, t) => {
-			t.as_ref().unwrap();
-			unimplemented!()
+		Expr::FieldAccess(s, f, t, so) => {
+			let outer = fnc.symbols.get(s.raw.as_str()).unwrap();
+			let so = outer.stack_offset.unwrap() + so.unwrap();
+
+			for i in 0..(t.as_ref().unwrap().size() / 4) {
+				program
+					.code
+					.push(MemoryCell::with_data(OpCode::Load4, (so + (i * 4)) as u16))
+			}
 		}
-		Expr::StructConstruction(tk, fields) => unimplemented!(),
+		Expr::StructConstruction(_, s, fields) => {
+			let decl = s.as_ref().unwrap().borrow();
+
+			for (name, tk) in decl.members.iter() {
+				let (_, field_expr) = fields.iter().find(|(f, e)| &f.item == &name.item).unwrap();
+				generate_expr(program, ast, fnc, field_expr);
+			}
+		}
 	}
 }

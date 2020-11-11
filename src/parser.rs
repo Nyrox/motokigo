@@ -342,14 +342,14 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 					}
 				}
 
-				Expr::StructConstruction(TypeKind::TypeRef(token.map(|_| i.clone())), fields)
+				Expr::StructConstruction(token.map(|_| i.clone()), None, fields)
 			}
 			Some(t) if t.item == Token::Dot => {
 				lexer.next();
 
 				let field = lexer.expect_identifier()?;
 
-				Expr::FieldAccess(Reference::unresolved(token.map(|_| i.clone())), field, None)
+				Expr::FieldAccess(Reference::unresolved(token.map(|_| i.clone())), field, None, None)
 			}
 			_ => Expr::Symbol(Reference::unresolved(token.map(|_| i.clone()))),
 		},

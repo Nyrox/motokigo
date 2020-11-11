@@ -53,7 +53,7 @@ pub struct Position {
 	pub offset: Option<u32>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Spanned<T> {
 	pub item: T,
 	pub from: Position,
@@ -192,10 +192,10 @@ impl std::cmp::PartialEq for TypeKind {
 		match (self, other) {
 			(I32, I32) => true,
 			(F32, F32) => true,
-			(TypeRef(a), TypeRef(b)) => a == b,
+			(TypeRef(a), TypeRef(b)) => &a.item == &b.item,
 			(Vector(ta, na), Vector(tb, nb)) => ta == tb && na == nb,
 			(Matrix(ta, na, ma), Matrix(tb, nb, mb)) => ta == tb && na == nb && ma == mb,
-			(Struct(a), Struct(b)) => a.borrow().ident == b.borrow().ident,
+			(Struct(a), Struct(b)) => &a.borrow().ident.item == &b.borrow().ident.item,
 			_ => false,
 		}
 	}
@@ -245,8 +245,12 @@ pub enum Expr {
 	FuncCall(FuncCall),
 	Literal(Spanned<Literal>),
 	Symbol(Symbol),
-	FieldAccess(Symbol, Spanned<Ident>, Option<TypeKind>),
-	StructConstruction(TypeKind, Vec<(Spanned<Ident>, Box<Expr>)>),
+	FieldAccess(Symbol, Spanned<Ident>, Option<TypeKind>, Option<usize>),
+	StructConstruction(
+		Spanned<Ident>,
+		Option<Rc<RefCell<StructDeclaration>>>,
+		Vec<(Spanned<Ident>, Box<Expr>)>,
+	),
 	Grouped(Box<Expr>),
 }
 
@@ -255,8 +259,8 @@ impl Expr {
 		match self {
 			Expr::FuncCall((def, _)) => def.resolved.clone().map(|(_, tk)| tk),
 			Expr::Symbol(s) => s.resolved.clone().map(|(_, tk)| tk),
-			Expr::FieldAccess(_, _, tk) => tk.clone(),
-			Expr::StructConstruction(tk, _) => Some(tk.clone()),
+			Expr::FieldAccess(_, _, tk, _) => tk.clone(),
+			Expr::StructConstruction(name, s, _) => s.clone().map(|s| TypeKind::Struct(s)),
 			Expr::Literal(l) => match l.item {
 				Literal::DecimalLiteral(_) => Some(TypeKind::F32),
 				Literal::IntegerLiteral(_) => Some(TypeKind::I32),
@@ -275,8 +279,8 @@ impl Expr {
 			Self::FuncCall(fc) => fc.0.raw.map(|_| ()),
 			Self::Literal(lit) => lit.map(|_| ()),
 			Self::Symbol(sym) => sym.raw.map(|_| ()),
-			Self::FieldAccess(sym, i, _) => Spanned::encompass((), sym.raw.just_span(), i.just_span()),
-			Self::StructConstruction(tk, _) => Spanned::<()>::empty(),
+			Self::FieldAccess(sym, i, _, _) => Spanned::encompass((), sym.raw.just_span(), i.just_span()),
+			Self::StructConstruction(name, _, _) => name.just_span(),
 			Self::Grouped(e) => e.span(),
 		}
 	}
@@ -292,11 +296,10 @@ impl Visitable for Expr {
 				v.post_func_call(func)?;
 			}
 			Expr::Symbol(s) => s.visit(v)?,
-			Expr::FieldAccess(s, _, _) => {
+			Expr::FieldAccess(s, _, _, _) => {
 				s.visit(v)?;
 			}
-			Expr::StructConstruction(tk, fields) => {
-				v.type_kind(tk)?;
+			Expr::StructConstruction(name, s, fields) => {
 				for (_, e) in fields {
 					e.visit(v)?;
 				}

@@ -37,6 +37,10 @@ impl GenerateGLSL {
 			self.consume_in_parameter(i);
 		}
 
+		for i in program.struct_declarations.iter() {
+			self.consume_struct_decl(i);
+		}
+
 		for i in program.functions.iter() {
 			self.consume_func_decl(i);
 		}
@@ -49,6 +53,14 @@ impl GenerateGLSL {
 		let glsl_type = get_glsl_type(&param.type_kind);
 		self.prelude
 			.push_str(&format!("in {} {};\n", glsl_type, param.ident.item));
+	}
+
+	pub fn consume_struct_decl(&mut self, param: &StructDeclaration) {
+		let members = param.members.iter().map(|(f, tk)| {
+			format!("\t{} {};\n", get_glsl_type(tk), &f.item)
+		}).collect::<Vec<_>>().join("");
+
+		self.prelude.push_str(&format!("\nstruct {} {{\n{}}};\n\n", &param.ident.item, &members));
 	}
 
 	pub fn consume_func_decl(&mut self, decl: &FunctionDeclaration) {
@@ -169,7 +181,16 @@ impl GenerateGLSL {
 			Expr::FieldAccess(s, f, _, _) => format!("{}.{}", s.resolved.clone().unwrap().0, f.item.clone()),
 			Expr::Literal(l) => l.to_string(),
 			Expr::Grouped(e) => format!("({})", self.generate_expr(e)),
-			Expr::StructConstruction(name, s, fields) => format!("oh god oh fuck"),
+			Expr::StructConstruction(name, s, fields) => {
+				let decl = s.as_ref().unwrap().borrow();
+
+				let fields = decl.members.iter().map(|(name, _)| {
+					let (_, e) = fields.iter().find(|(f, _)| &f.item == &name.item).unwrap();
+					self.generate_expr(e)
+				}).collect::<Vec<_>>();
+
+				format!("{}({})", &name.item, fields.join(", "))
+			},
 		}
 	}
 

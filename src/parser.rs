@@ -28,7 +28,7 @@ impl From<ScanningError> for ParsingError {
 
 type ParsingResult<T> = Result<T, ParsingError>;
 
-pub trait TokenSource {
+pub trait TokenSource: std::clone::Clone {
 	fn next(&mut self) -> Option<ItemType>;
 	fn peek(&mut self) -> Option<&ItemType>;
 
@@ -81,7 +81,7 @@ pub trait TokenSource {
 
 impl<T> TokenSource for Peekable<T>
 where
-	T: Iterator<Item = ItemType>,
+	T: Iterator<Item = ItemType> + Clone,
 {
 	fn next(&mut self) -> Option<ItemType> {
 		std::iter::Iterator::next(self)
@@ -323,12 +323,18 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 				Expr::FuncCall((Reference::unresolved(token.map(|_| i.clone())), exprs))
 			}
 			Some(t) if t.item == Token::LeftBrace => {
-				lexer.next();
+				let mut lookahead = lexer.clone();
+				lookahead.next();
+				match (lookahead.next().map(|x| x.item), lookahead.next().map(|x| x.item)) {
+					(Some(Token::Identifier(_)), Some(Token::Colon)) => (),
+					_ => return Ok(Expr::Symbol(Reference::unresolved(token.map(|_| i.clone()))))
+				}
 
+				lexer.next();
 				let mut fields = Vec::new();
 				loop {
 					let i = lexer.expect_identifier()?;
-					lexer.expect_token(Token::Equals)?;
+					lexer.expect_token(Token::Colon)?;
 					let rhs = parse_expr_bp(lexer, 0)?;
 
 					fields.push((i, Box::new(rhs)));

@@ -21,6 +21,7 @@ pub enum Token {
 	Equals,
 	EqualsEquals,
 	Comma,
+	Colon,
 
 	Plus,
 	Minus,
@@ -179,6 +180,7 @@ impl<I: Iterator<Item = char>> Scanner<I> {
 			'<' => tok(Token::Less),
 			'>' => tok(Token::Greater),
 			'=' => tok(Token::Equals),
+			':' => tok(Token::Colon),
 
 			'\n' => {
 				self.line += 1;

@@ -51,8 +51,13 @@ impl GenerateGLSL {
 
 	pub fn consume_in_parameter(&mut self, param: &InParameterDeclaration) {
 		let glsl_type = get_glsl_type(&param.type_kind);
+		let param_type = match  param.is_uniform {
+			true => "uniform",
+			false => "in"
+		};
+
 		self.prelude
-			.push_str(&format!("in {} {};\n", glsl_type, param.ident.item));
+			.push_str(&format!("{} {} {};\n", param_type, glsl_type, param.ident.item));
 	}
 
 	pub fn consume_struct_decl(&mut self, param: &StructDeclaration) {
@@ -67,7 +72,7 @@ impl GenerateGLSL {
 		let glsl_type = get_glsl_type(&decl.ret_type);
 
 		let func_ident = match decl.ident.item.as_str() {
-			"main" => "__impl_main".to_owned(),
+			"main" => "m_impl_main".to_owned(),
 			i => i.to_owned(),
 		};
 
@@ -92,7 +97,7 @@ impl GenerateGLSL {
 		self.prelude.push_str(&format!("out {} {};\n", glsl_type, "out_0"));
 
 		let shim_text = format!(
-			"void main() {{\n\t{} rt = __impl_main();\n\tout_0 = rt;\n}}\n",
+			"void main() {{\n\t{} rt = m_impl_main();\n\tout_0 = rt;\n}}\n",
 			glsl_type
 		);
 

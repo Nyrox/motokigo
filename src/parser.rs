@@ -108,7 +108,15 @@ pub fn parse_program(tokens: &mut impl TokenSource) -> ParsingResult<Program> {
 				let type_kind = tokens.expect_typekind()?;
 
 				let ident = tokens.expect_identifier()?;
-				program.in_parameters.push(InParameterDeclaration { type_kind, ident });
+				program.in_parameters.push(InParameterDeclaration { type_kind, ident, is_uniform: false });
+				continue;
+			}
+			Token::Uniform => {
+				tokens.expect_token(Token::Uniform)?;
+				let type_kind = tokens.expect_typekind()?;
+
+				let ident = tokens.expect_identifier()?;
+				program.in_parameters.push(InParameterDeclaration { type_kind, ident, is_uniform: true });
 				continue;
 			}
 			Token::Struct => {

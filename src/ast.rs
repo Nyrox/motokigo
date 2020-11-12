@@ -384,6 +384,7 @@ impl Visitable for FunctionDeclaration {
 pub struct InParameterDeclaration {
 	pub type_kind: Spanned<TypeKind>,
 	pub ident: Spanned<Ident>,
+	pub is_uniform: bool,
 }
 
 impl Visitable for InParameterDeclaration {

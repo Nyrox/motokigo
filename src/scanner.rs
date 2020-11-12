@@ -10,6 +10,7 @@ pub enum Token {
 	Else,
 	For,
 	To,
+	Uniform,
 
 	Struct,
 	Int,
@@ -121,6 +122,7 @@ impl<I: Iterator<Item = char>> Scanner<I> {
 			"for" => Some(Token::For),
 			"to" => Some(Token::To),
 			"struct" => Some(Token::Struct),
+			"uniform" => Some(Token::Uniform),
 			_ => None,
 		}
 	}

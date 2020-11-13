@@ -1,5 +1,3 @@
-use std::iter::repeat;
-
 use crate::{ast::*, vm::*};
 
 pub mod program_data;
@@ -277,8 +275,6 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
                     }
                 }
                 TypeKind::Vector(_, _) => {
-                    let len = f.len();
-
                     let xyzw = "xyzw";
                     let rgba = "rgba";
                     for c in f.chars() {
@@ -292,8 +288,8 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 		Expr::StructConstruction(_, s, fields) => {
 			let decl = s.as_ref().unwrap().borrow();
 
-			for (name, tk) in decl.members.iter() {
-				let (_, field_expr) = fields.iter().find(|(f, e)| &f.item == &name.item).unwrap();
+			for (name, _) in decl.members.iter() {
+				let (_, field_expr) = fields.iter().find(|(f, _)| &f.item == &name.item).unwrap();
 				generate_expr(program, ast, fnc, field_expr);
 			}
 		}

@@ -286,7 +286,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
 						))))?;
 					}
                 }
-                TypeKind::Vector(tk, size) => {
+                TypeKind::Vector(tk, _) => {
                     fn all_in_set(s: &String, set: Vec<char>) -> bool {
                         for c in s.chars() {
                             if !set.contains(&c) {
@@ -309,7 +309,7 @@ impl<'a> Visitor for ResolveTypes<'a> {
                             } else {
                                 *t = Some(TypeKind::Vector(tk.clone(), len));
                             }
-                            *so = None //TODO: Set this?
+                            *so = None
                         } else {
                             Err(Box::new(TypeError::GenericError(
                                 "Vector components are not from the same set".to_owned()

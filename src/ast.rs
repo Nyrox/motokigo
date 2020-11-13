@@ -260,7 +260,7 @@ impl Expr {
 			Expr::FuncCall((def, _)) => def.resolved.clone().map(|(_, tk)| tk),
 			Expr::Symbol(s) => s.resolved.clone().map(|(_, tk)| tk),
 			Expr::FieldAccess(_, _, tk, _) => tk.clone(),
-			Expr::StructConstruction(name, s, _) => s.clone().map(|s| TypeKind::Struct(s)),
+			Expr::StructConstruction(_, s, _) => s.clone().map(|s| TypeKind::Struct(s)),
 			Expr::Literal(l) => match l.item {
 				Literal::DecimalLiteral(_) => Some(TypeKind::F32),
 				Literal::IntegerLiteral(_) => Some(TypeKind::I32),
@@ -299,7 +299,7 @@ impl Visitable for Expr {
 			Expr::FieldAccess(s, _, _, _) => {
 				s.visit(v)?;
 			}
-			Expr::StructConstruction(name, s, fields) => {
+			Expr::StructConstruction(_, _, fields) => {
 				for (_, e) in fields {
 					e.visit(v)?;
 				}

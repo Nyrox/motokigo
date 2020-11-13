@@ -283,22 +283,19 @@ pub fn parse_conditional(tokens: &mut impl TokenSource) -> ParsingResult<Conditi
 
 pub fn infix_binding_power(t: &Token) -> Option<(u8, u8)> {
 	match t {
-		Token::Plus => Some((1, 2)),
-		Token::Minus => Some((1, 2)),
-		Token::Star => Some((3, 4)),
-		Token::Slash => Some((3, 4)),
-		Token::Less => Some((0, 1)),
-		Token::LessEq => Some((0, 1)),
-		Token::Greater => Some((0, 1)),
-		Token::GreaterEq => Some((0, 1)),
-		Token::EqualsEquals => Some((0, 1)),
+		Token::Plus | Token::Minus => Some((2, 3)),
+		Token::Star | Token::Slash => Some((4, 5)),
+        Token::Less | Token::LessEq | Token::Greater | Token::GreaterEq | 
+        Token::EqualsEquals | Token::BangEquals => Some((1, 2)),
+        Token::And | Token::Or | Token::Xor => Some((0, 1)),
 		_ => None,
 	}
 }
 
 pub fn prefix_binding_power(t: &Token) -> Option<((), u8)> {
 	match t {
-		Token::Minus => Some(((), 5)),
+        Token::Minus => Some(((), 6)),
+        Token::Bang => Some(((), 7)),
 		_ => None,
 	}
 }
@@ -377,7 +374,8 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 
 			let rhs = parse_expr_bp(lexer, r_bp)?;
 			let fnc = match t {
-				Token::Minus => "__op_unary_neg",
+                Token::Minus => "__op_unary_neg",
+                Token::Bang => "__op_unary_not",
 				_ => unreachable!(), // at this point we know we have a valid unary operator, so this is fine
 			};
 
@@ -410,7 +408,11 @@ pub fn parse_expr_bp(lexer: &mut impl TokenSource, min_bp: u8) -> ParsingResult<
 			Token::LessEq => "__op_binary_less_equal",
 			Token::Greater => "__op_binary_greater",
 			Token::GreaterEq => "__op_binary_greater_equal",
-			Token::EqualsEquals => "__op_binary_equality",
+            Token::EqualsEquals => "__op_binary_equality",
+            Token::BangEquals => "__op_binary_not_equal",
+            Token::And => "__op_binary_and",
+            Token::Or => "__op_binary_or",
+            Token::Xor => "__op_binary_xor",
 			_ => unreachable!(),
 		};
 

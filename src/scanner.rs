@@ -31,7 +31,12 @@ pub enum Token {
 	Less,
 	LessEq,
 	Greater,
-	GreaterEq,
+    GreaterEq,
+    Bang,
+    BangEquals,
+    And,
+    Xor,
+    Or,
 	Dot,
 
 	Void,
@@ -178,10 +183,27 @@ impl<I: Iterator<Item = char>> Scanner<I> {
 			'=' if peeked == Some('=') => {
 				self.advance();
 				tok(Token::EqualsEquals)
-			}
+            }
+            '!' if peeked == Some('=') => {
+				self.advance();
+				tok(Token::BangEquals)
+            }
+            '&' if peeked == Some('&') => {
+                self.advance();
+                tok(Token::And)
+            }
+            '|' if peeked == Some('|') => {
+                self.advance();
+                tok(Token::Or)
+            }
+            '^' if peeked == Some('^') => {
+                self.advance();
+                tok(Token::Xor)
+            }
 			'<' => tok(Token::Less),
 			'>' => tok(Token::Greater),
-			'=' => tok(Token::Equals),
+            '=' => tok(Token::Equals),
+            '!' => tok(Token::Bang),
 			':' => tok(Token::Colon),
 
 			'\n' => {

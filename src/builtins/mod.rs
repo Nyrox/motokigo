@@ -15,6 +15,9 @@ pub trait BuiltInType {
 	fn type_kind() -> TypeKind;
 }
 
+pub type Float = f32;
+pub type Int = i32;
+
 impl BuiltInType for f32 {
 	fn stack_size() -> usize {
 		std::mem::size_of::<f32>()

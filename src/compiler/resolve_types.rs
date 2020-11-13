@@ -285,7 +285,38 @@ impl<'a> Visitor for ResolveTypes<'a> {
 							f, s.ident
 						))))?;
 					}
-				}
+                }
+                TypeKind::Vector(tk, size) => {
+                    fn all_in_set(s: &String, set: Vec<char>) -> bool {
+                        for c in s.chars() {
+                            if !set.contains(&c) {
+                                return false;
+                            }
+                        }
+                        true
+                    }
+
+                    let len = f.len();
+                    if len > 4 {
+                        Err(Box::new(TypeError::GenericError(format!(
+							"{:?} is not a valid vector accessor",
+							f
+						))))?;
+                    } else {
+                        if all_in_set(f, vec!['x', 'y', 'z', 'w']) || all_in_set(f, vec!['r', 'g', 'b', 'a']) {
+                            if len == 1 {
+                                *t = Some(*tk.clone());
+                            } else {
+                                *t = Some(TypeKind::Vector(tk.clone(), len));
+                            }
+                            *so = None //TODO: Set this?
+                        } else {
+                            Err(Box::new(TypeError::GenericError(
+                                "Vector components are not from the same set".to_owned()
+                            )))?;
+                        }
+                    }
+                }
 				_ => Err(Box::new(TypeError::GenericError(format!(
 					"Field access on type {:?} is not valid",
 					s.resolved.as_ref().unwrap().1.clone()

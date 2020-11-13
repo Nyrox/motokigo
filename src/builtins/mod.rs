@@ -44,9 +44,9 @@ pub trait BuiltInCallable: BuiltInCallableGLSL {
 	fn arg_types(&self) -> Vec<TypeKind>;
 }
 
-pub fn get_builtin_fn<'a>(id: &str, arg_types: &'a [TypeKind]) -> Option<(usize, &'static dyn BuiltInCallable)> {
+pub fn get_builtin_fn<'a>(id: &str, arg_types: &'a Vec<TypeKind>) -> Option<(usize, &'static dyn BuiltInCallable)> {
 	for (i, f) in functions::FUNCTIONS.iter().enumerate() {
-		if f.ident() == id && f.arg_types().as_slice() == arg_types {
+		if f.ident() == id && f.arg_types() == *arg_types {
 			return Some((i, *f));
 		}
 	}

@@ -1,3 +1,5 @@
+use std::iter::repeat;
+
 use crate::{ast::*, vm::*};
 
 pub mod program_data;
@@ -152,7 +154,7 @@ pub fn generate_statement(program: &mut VMProgram, ast: &Program, fnc: &mut Func
 					.code
 					.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
 				generate_expr(program, ast, fnc, to);
-				let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32])
+				let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &vec![TypeKind::I32, TypeKind::I32])
 					.unwrap()
 					.0;
 				program
@@ -177,7 +179,7 @@ pub fn generate_statement(program: &mut VMProgram, ast: &Program, fnc: &mut Func
 				program
 					.code
 					.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
-				let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32])
+				let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &vec![TypeKind::I32, TypeKind::I32])
 					.unwrap()
 					.0;
 				program
@@ -262,14 +264,38 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 		}
 		Expr::Grouped(e) => generate_expr(program, ast, fnc, e),
 		Expr::FieldAccess(s, f, t, so) => {
-			let outer = fnc.symbols.get(s.raw.as_str()).unwrap();
-			let so = outer.stack_offset.unwrap() + so.unwrap();
+            let outer = fnc.symbols.get(s.raw.as_str()).unwrap();
+            let stack_offset = outer.stack_offset.unwrap();
+            match &s.resolved.as_ref().unwrap().1 {
+				TypeKind::Struct(_) => {
+                    let so = stack_offset + so.unwrap();
+        
+                    for i in 0..(t.as_ref().unwrap().size() / 4) {
+                        program
+                            .code
+                            .push(MemoryCell::with_data(OpCode::Load4, (so + (i * 4)) as u16))
+                    }
+                }
+                TypeKind::Vector(_, _) => {
+                    let len = f.len();
 
-			for i in 0..(t.as_ref().unwrap().size() / 4) {
-				program
-					.code
-					.push(MemoryCell::with_data(OpCode::Load4, (so + (i * 4)) as u16))
-			}
+                    let xyzw = "xyzw";
+                    let rgba = "rgba";
+
+                    for c in f.chars() {
+                        let i = xyzw.find(c).unwrap_or_else(|| rgba.find(c).unwrap());
+                        program.code.push(MemoryCell::with_data(OpCode::Load4, stack_offset as u16 + (i as u16 * 4)));
+                    }
+                    
+                    if len > 1 {
+                        let ctor = crate::builtins::get_builtin_fn(
+                            format!("Vec{}", len).as_str(), 
+                            &repeat(TypeKind::F32).take(len).collect()).unwrap().0;
+                        program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, ctor as u16));
+                    }
+                }
+                _ => panic!("Unexpected type")
+            }
 		}
 		Expr::StructConstruction(_, s, fields) => {
 			let decl = s.as_ref().unwrap().borrow();

@@ -154,7 +154,7 @@ pub fn generate_statement(program: &mut VMProgram, ast: &Program, fnc: &mut Func
 					.code
 					.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
 				generate_expr(program, ast, fnc, to);
-				let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &vec![TypeKind::I32, TypeKind::I32])
+				let cmp_fn = crate::builtins::get_builtin_fn("__op_binary_less", &[TypeKind::I32, TypeKind::I32])
 					.unwrap()
 					.0;
 				program
@@ -179,7 +179,7 @@ pub fn generate_statement(program: &mut VMProgram, ast: &Program, fnc: &mut Func
 				program
 					.code
 					.push(MemoryCell::with_data(OpCode::Load4, iter_offset as u16));
-				let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &vec![TypeKind::I32, TypeKind::I32])
+				let incr_fn = crate::builtins::get_builtin_fn("__op_binary_add", &[TypeKind::I32, TypeKind::I32])
 					.unwrap()
 					.0;
 				program
@@ -281,17 +281,9 @@ pub fn generate_expr(program: &mut VMProgram, ast: &Program, fnc: &FuncMeta, exp
 
                     let xyzw = "xyzw";
                     let rgba = "rgba";
-
                     for c in f.chars() {
                         let i = xyzw.find(c).unwrap_or_else(|| rgba.find(c).unwrap());
                         program.code.push(MemoryCell::with_data(OpCode::Load4, stack_offset as u16 + (i as u16 * 4)));
-                    }
-                    
-                    if len > 1 {
-                        let ctor = crate::builtins::get_builtin_fn(
-                            format!("Vec{}", len).as_str(), 
-                            &repeat(TypeKind::F32).take(len).collect()).unwrap().0;
-                        program.code.push(MemoryCell::with_data(OpCode::CallBuiltIn, ctor as u16));
                     }
                 }
                 _ => panic!("Unexpected type")

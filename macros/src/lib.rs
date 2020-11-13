@@ -2,6 +2,23 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::*;
 
+fn replace_str_dyn(mut source: String, insert: &[String]) -> String {
+    let mut i = 0;
+    while let Some(offset) = source.find("{}") {
+        if insert.len() < i {
+            panic!();
+        }
+        source.replace_range(offset..(offset + 2), insert[i].as_str());
+        i += 1;
+    }
+
+    if insert.len() != i {
+        panic!();
+    }
+
+    source
+}
+
 #[proc_macro_attribute]
 pub fn generate_glsl_impl_inline(
 	attr: proc_macro::TokenStream,
@@ -18,15 +35,14 @@ pub fn generate_glsl_impl_inline(
 	};
 	//println!("{:?}", opts);
 	if struct_name.contains("{}") {
-		/*let replacement = match &opts[1] {
-			syn::NestedMeta::Lit(syn::Lit::Verbatim(name)) => name.to_string(),
-			_ => panic!("You are beyond gods domain"),
-		};*/
-		let mut bs = Default::default();
-		opts[1].to_tokens(&mut bs);
-		let replacement = bs.to_string();
-		struct_name = struct_name.replace("{}", &replacement);
-	}
+        let mut str_ops = Vec::new();
+        for i in 1..opts.len() {
+            let mut bs = Default::default();
+            opts[i].to_tokens(&mut bs);
+            str_ops.push(bs.to_string());
+        }
+        struct_name = replace_str_dyn(struct_name, str_ops.as_slice());
+    }
 
 	let struct_name = syn::Ident::new(&struct_name, proc_macro::Span::call_site().into());
 	let len = func.sig.inputs.len();
@@ -57,22 +73,21 @@ pub fn generate_builtin_fn(attr: proc_macro::TokenStream, item: proc_macro::Toke
 
 	//assert_eq!(opts.len(), 1, "Expected only one argument.");
 
-	let name = match &opts[0] {
+	let mut name = match &opts[0] {
 		syn::NestedMeta::Lit(syn::Lit::Str(name)) => name.value(),
 		_ => panic!("Expected first and only macro argument to be a string."),
-	};
+    };
+    if name.contains("{}") {
+        let mut str_ops = Vec::new();
+        for i in 1..opts.len() {
+            let mut bs = Default::default();
+            opts[i].to_tokens(&mut bs);
+            str_ops.push(bs.to_string());
+        }
+        name = replace_str_dyn(name, str_ops.as_slice());
+    }
+    let struct_name = func.sig.ident.clone();
 
-	let struct_name = func.sig.ident.clone();
-
-	let struct_name = if struct_name.to_string().contains("{}") {
-		let replacement = match &opts[1] {
-			syn::NestedMeta::Lit(syn::Lit::Verbatim(name)) => name.to_string(),
-			_ => panic!("You are beyond gods domain"),
-		};
-		Ident::new(&struct_name.to_string().replace("{}", &replacement), struct_name.span())
-	} else {
-		struct_name
-	};
 
 	let ret_type = match &func.sig.output {
 		syn::ReturnType::Type(_, t) => t,
@@ -84,7 +99,7 @@ pub fn generate_builtin_fn(attr: proc_macro::TokenStream, item: proc_macro::Toke
 			let name = match &*pt.pat {
 				syn::Pat::Ident(i) => i.ident.clone(),
 				_ => panic!("Please stop"),
-			};
+            };
 
 			let ty = pt.ty;
 

@@ -9,7 +9,7 @@ use std::{
 };
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Vector<T: Scalar, const N: usize>(Matrix<T, 1, N>);
 
 impl<T: Scalar, const N: usize> Default for Vector<T, N> {

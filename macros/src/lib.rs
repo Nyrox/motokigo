@@ -273,7 +273,7 @@ impl Parse for Test {
 }
 
 #[proc_macro]
-pub fn bingbong(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn implement_func(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // bingbong!(Elem, elem, |a: Vec2, b: Int| -> Float { a.get_elem(b as usize) }, "{}[{}]");
 
     let parsed = parse_macro_input!(item as Test);

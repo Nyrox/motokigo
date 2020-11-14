@@ -1,15 +1,15 @@
 use crate::{ast::TypeKind, builtins::*, vm::VirtualMachine};
 use macros::{generate_builtin_fn, generate_glsl_impl_inline};
-use macros::bingbong;
+use macros::implement_func;
 use crate::glsl::{compiler::GenerateGLSL, BuiltInCallableGLSL};
 
 macro_rules! implement_vec_funcs {
     ( $name:ident ) => {
-        bingbong!(Elem, elem, |a: $name, b: Int| -> Float { a.get_elem(b as usize) }, "{}[{}]");
-        bingbong!(Length, length, |a: $name| -> Float { a.length() }, "length({})");
-        bingbong!(Normalize, normalize, |a: $name| -> $name { a.normalize() }, "normalize({})");
-        bingbong!(Dot, dot, |a: $name, b: $name| -> Float { a.dot(b) }, "dot({}, {})");
-        bingbong!(Distance, distance, |a: $name, b: $name| -> Float { (a - b).length() }, "distance({}, {})");
+        implement_func!(Elem, elem, |a: $name, b: Int| -> Float { a.get_elem(b as usize) }, "{}[{}]");
+        implement_func!(Length, length, |a: $name| -> Float { a.length() }, "length({})");
+        implement_func!(Normalize, normalize, |a: $name| -> $name { a.normalize() }, "normalize({})");
+        implement_func!(Dot, dot, |a: $name, b: $name| -> Float { a.dot(b) }, "dot({}, {})");
+        implement_func!(Distance, distance, |a: $name, b: $name| -> Float { (a - b).length() }, "distance({}, {})");
     }
 }
 implement_vec_funcs!(Vec2);
@@ -18,8 +18,8 @@ implement_vec_funcs!(Vec4);
 
 macro_rules! implement_common_num_funcs {
     ( $name:ident ) => {
-        bingbong!(Abs, abs, |a: $name| -> $name { a.abs() }, "abs({})");
-        bingbong!(Sign, sign, |a: $name| -> $name { a.signum() }, "sign({})");
+        implement_func!(Abs, abs, |a: $name| -> $name { a.abs() }, "abs({})");
+        implement_func!(Sign, sign, |a: $name| -> $name { a.signum() }, "sign({})");
     }
 }
 implement_common_num_funcs!(Float);
@@ -28,12 +28,12 @@ implement_common_num_funcs!(Int);
 macro_rules! implement_float_func { 
     ( $func:ident, $impl:expr, $glimpl:literal, 1) => {
         paste::item! {
-            bingbong!($func, [<$func:lower>], |a: Float| -> Float { $impl(a) }, $glimpl);
+            implement_func!($func, [<$func:lower>], |a: Float| -> Float { $impl(a) }, $glimpl);
         }
     };
     ( $func:ident, $impl:expr, $glimpl:literal, 2) => {
         paste::item! {
-            bingbong!($func, [<$func:lower>], |a: Float, b: Float| -> Float { $impl(a, b) }, $glimpl);
+            implement_func!($func, [<$func:lower>], |a: Float, b: Float| -> Float { $impl(a, b) }, $glimpl);
         }
     };
 }

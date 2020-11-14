@@ -1,20 +1,20 @@
 use crate::{ast::TypeKind, builtins::*, vm::VirtualMachine};
 use macros::{generate_builtin_fn, generate_glsl_impl_inline, generate_matrix_ctor, generate_vector_ctor};
-
+use macros::bingbong;
 use crate::glsl::{compiler::GenerateGLSL, BuiltInCallableGLSL};
 
 macro_rules! implement_vec_op {
 	( $name:ident, $comp:ident ) => {
 		paste::item! {
-            implement_func!(BinMul, __op_binary_mul, a * b, "{} * {}", $name, $comp, $name);
-            implement_func!(BinMul, __op_binary_mul, b * a, "{} * {}", $comp, $name, $name);
-            implement_func!(BinDiv, __op_binary_div, a / b, "{} / {}", $name, $comp, $name);
-            implement_func!(BinAdd, __op_binary_add, a + b, "{} + {}", $name, $name, $name);
-            implement_func!(BinSub, __op_binary_sub, a - b, "{} - {}", $name, $name, $name);
+            bingbong!(BinMul, __op_binary_mul, |a: $name, b: $comp| -> $name { a * b }, "{} * {}");
+            bingbong!(BinMul, __op_binary_mul, |a: $comp, b: $name| -> $name { b * a }, "{} * {}");
+            bingbong!(BinDiv, __op_binary_div, |a: $name, b: $comp| -> $name { a / b }, "{} / {}");
+            bingbong!(BinAdd, __op_binary_add, |a: $name, b: $name| -> $name { a + b }, "{} + {}");
+            bingbong!(BinSub, __op_binary_sub, |a: $name, b: $name| -> $name { a - b }, "{} - {}");
 
-            implement_func!(BinNeg, __op_unary_neg, a * (-1.0 as $comp), "-{}", $name, $name);
-            implement_func!(BinEquality, __op_binary_equality, if a == b { 1 } else { 0 }, "{} == {}", $name, $name, Int);
-            implement_func!(BinNotEqual, __op_binary_not_equal, if a != b { 1 } else { 0 }, "{} != {}", $name, $name, Int);
+            bingbong!(BinNeg, __op_unary_neg, |a: $name| -> $name { a * (-1.0 as $comp) }, "-{}");
+            bingbong!(BinEquality, __op_binary_equality, |a: $name, b: $name| -> Int { if a == b { 1 } else { 0 } }, "{} == {}");
+            bingbong!(BinNotEqual, __op_binary_not_equal, |a: $name, b: $name| -> Int { if a != b { 1 } else { 0 } }, "{} != {}");
 		}
 	};
 }
@@ -40,14 +40,14 @@ generate_matrix_ctor!(4, 4);
 macro_rules! implement_common_num_ops {
 	( $name:ident ) => {
 		paste::item! {
-            implement_func!(UnNeg, __op_unary_neg, -a, "-{}", $name, $name);
-            implement_func!(BinEquality, __op_binary_equality, if a == b { 1 } else { 0 }, "{} == {}", $name, $name, Int);
-            implement_func!(BinNotEqual, __op_binary_not_equal, if a != b { 1 } else { 0 }, "{} != {}", $name, $name, Int);
+            bingbong!(UnNeg, __op_unary_neg, |a: $name| -> $name { -a }, "-{}");
+            bingbong!(BinEquality, __op_binary_equality, |a: $name, b: $name| -> Int { if a == b { 1 } else { 0 } }, "{} == {}");
+            bingbong!(BinNotEqual, __op_binary_not_equal, |a: $name, b: $name| -> Int { if a != b { 1 } else { 0 } }, "{} != {}");
 
-            implement_func!(BinLess, __op_binary_less, if a < b { 1 } else { 0 }, "{} < {}", $name, $name, Int);
-            implement_func!(BinLessEq, __op_binary_less_equal, if a <= b { 1 } else { 0 }, "{} <= {}", $name, $name, Int);       
-            implement_func!(BinGreater, __op_binary_greater, if a >= b { 1 } else { 0 }, "{} > {}", $name, $name, Int);
-            implement_func!(BinGreaterEq, __op_binary_greater_equal, if a >= b { 1 } else { 0 }, "{} >= {}", $name, $name, Int);
+            bingbong!(BinLess, __op_binary_less, |a: $name, b: $name| -> Int { if a < b { 1 } else { 0 } }, "{} < {}");
+            bingbong!(BinLessEq, __op_binary_less_equal, |a: $name, b: $name| -> Int { if a <= b { 1 } else { 0 } }, "{} <= {}");       
+            bingbong!(BinGreater, __op_binary_greater, |a: $name, b: $name| -> Int { if a >= b { 1 } else { 0 } }, "{} > {}");
+            bingbong!(BinGreaterEq, __op_binary_greater_equal, |a: $name, b: $name| -> Int { if a >= b { 1 } else { 0 } }, "{} >= {}");
 		}
 	};
 }
@@ -55,10 +55,10 @@ macro_rules! implement_common_num_ops {
 macro_rules! implement_float_num_ops {
 	( $name:ident ) => {
 		paste::item! {
-            implement_func!(BinMul, __op_binary_mul, a * b, "{} * {}", $name, $name, $name);
-            implement_func!(BinDiv, __op_binary_div, a / b, "{} / {}", $name, $name, $name);
-            implement_func!(BinAdd, __op_binary_add, a + b, "{} + {}", $name, $name, $name);
-            implement_func!(BinSub, __op_binary_sub, a - b, "{} - {}", $name, $name, $name);
+            bingbong!(BinMul, __op_binary_mul, |a: $name, b: $name| -> $name { a * b }, "{} * {}");
+            bingbong!(BinDiv, __op_binary_div, |a: $name, b: $name| -> $name { a / b }, "{} / {}");
+            bingbong!(BinAdd, __op_binary_add, |a: $name, b: $name| -> $name { a + b }, "{} + {}");
+            bingbong!(BinSub, __op_binary_sub, |a: $name, b: $name| -> $name { a - b }, "{} - {}");
 		}
 	};
 }
@@ -66,16 +66,14 @@ macro_rules! implement_float_num_ops {
 macro_rules! implement_integer_num_ops {
 	( $name:ident ) => {
 		paste::item! {
-            implement_func!(UnNot, __op_unary_not, if a == 0 { 1 as $name } else { 0 as $name }, "!{}", $name, $name);
-
-            implement_func!(BinMul, __op_binary_mul, a.wrapping_mul(b), "{} * {}", $name, $name, $name);
-            implement_func!(BinDiv, __op_binary_div, a.wrapping_div(b), "{} / {}", $name, $name, $name);
-            implement_func!(BinAdd, __op_binary_add, a.wrapping_add(b), "{} + {}", $name, $name, $name);
-            implement_func!(BinSub, __op_binary_sub, a.wrapping_sub(b), "{} - {}", $name, $name, $name);
-
-            implement_func!(BinAnd, __op_binary_and, if a != 0 && b != 0 { 1 } else { 0 }, "bool({}) && bool({})", $name, $name, $name);
-            implement_func!(BinOr, __op_binary_or, if a != 0 || b != 0 { 1 } else { 0 }, "bool({}) || bool({})", $name, $name, $name);
-            implement_func!(BinXor, __op_binary_or, unimplemented!("{}, {}", a, b), "bool({}) ^^ bool({})", $name, $name, $name);
+            bingbong!(UnNot, __op_unary_not, |a: $name| -> $name { if a == 0 { 1 as $name } else { 0 as $name } }, "!{}");
+            bingbong!(BinMul, __op_binary_mul, |a: $name, b: $name| -> $name { a.wrapping_mul(b) }, "{} * {}");
+            bingbong!(BinDiv, __op_binary_div, |a: $name, b: $name| -> $name { a.wrapping_div(b) }, "{} / {}");
+            bingbong!(BinAdd, __op_binary_add, |a: $name, b: $name| -> $name { a.wrapping_add(b) }, "{} + {}");
+            bingbong!(BinSub, __op_binary_sub, |a: $name, b: $name| -> $name { a.wrapping_sub(b) }, "{} - {}");
+            bingbong!(BinAnd, __op_binary_and, |a: $name, b: $name| -> $name { if a != 0 && b != 0 { 1 } else { 0 } }, "bool({}) && bool({})");
+            bingbong!(BinOr, __op_binary_or,   |a: $name, b: $name| -> $name { if a != 0 || b != 0 { 1 } else { 0 } }, "bool({}) || bool({})");
+            bingbong!(BinXor, __op_binary_or,  |a: $name, b: $name| -> $name { unimplemented!("{}, {}", a, b) }, "bool({}) ^^ bool({})");
 		}
 	};
 }
@@ -85,5 +83,5 @@ implement_common_num_ops!(Int);
 implement_float_num_ops!(Float);
 implement_integer_num_ops!(Int);
 
-implement_func!(Cast, int, a as i32, "int({})", Float, Int);
-implement_func!(Cast, float, a as f32, "float({})", Int, Float);
+bingbong!(Cast, int, |a: Float| -> Int { a as i32 }, "int({})");
+bingbong!(Cast, float, |a: Int| -> Float { a as f32 }, "float({})");

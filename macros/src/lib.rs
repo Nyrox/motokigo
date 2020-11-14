@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::*;
+use syn::parse::{Parse, ParseStream, Result};
+use syn::Pat::{Type};
 
 fn replace_str_dyn(mut source: String, insert: &[String]) -> String {
     let mut i = 0;
@@ -241,4 +243,78 @@ fn generate_ctor(
 		}
 	})
 	.into()
+}
+
+#[derive(Clone, Debug)]
+struct Test {
+    func_name: Ident,
+    sl_func_name: Ident,
+    impl_body: ExprClosure,
+    sl_impl_body: LitStr
+}
+
+impl Parse for Test {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let func_name: Ident = input.parse()?;
+        input.parse::<Token![,]>()?;
+        let sl_func_name: Ident = input.parse()?;
+        input.parse::<Token![,]>()?;
+        let impl_body: ExprClosure = input.parse()?;
+        input.parse::<Token![,]>()?;
+        let sl_impl_body: LitStr = input.parse()?;
+
+        Ok(Self {
+            func_name,
+            sl_func_name,
+            impl_body,
+            sl_impl_body
+        })
+    }
+}
+
+#[proc_macro]
+pub fn bingbong(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // bingbong!(Elem, elem, |a: Vec2, b: Int| -> Float { a.get_elem(b as usize) }, "{}[{}]");
+
+    let parsed = parse_macro_input!(item as Test);
+    let closure = parsed.impl_body.clone();
+    let fmt_string = parsed.sl_impl_body.clone();
+    let glfunc = parsed.sl_func_name.clone().to_string().to_token_stream();
+    let ret_type = parsed.impl_body.output;
+    let ret_type = match ret_type {
+        ReturnType::Type(_, x) => x,
+        _ => panic!()
+    };
+
+    let args_untyped_first = parsed.impl_body.inputs.clone().into_iter()
+        .map(|x| match x { Type(pt) => *pt.pat, _ => panic!() }).collect::<Vec<_>>();
+
+    let types = parsed.impl_body.inputs.to_token_stream();
+    
+    fn str_vec_to_tokenstream(a: Vec<String>) -> TokenStream {
+        a.join(", ").parse::<TokenStream>().unwrap()
+    }
+
+    let num_args = parsed.impl_body.inputs.clone().into_iter().len();
+    let str_args_typed = str_vec_to_tokenstream((0..num_args).map(|i| format!("a{}: &str", i)).collect());
+    let str_args_untyped = str_vec_to_tokenstream((0..num_args).map(|i| format!("a{}", i)).collect());
+
+    let args_typed_first = parsed.impl_body.inputs.clone().into_iter()
+        .map(|x| match x { Type(pt) => (*pt.ty).into_token_stream().to_string(), _ => panic!() })
+        .collect::<Vec<_>>().join("");
+    let ident_final = format_ident!("{}{}", args_typed_first, parsed.func_name);
+    let ident_final_str = ident_final.to_string().to_token_stream();
+
+    (quote!{
+        #[generate_builtin_fn(#glfunc)]
+        fn #ident_final(#types) -> #ret_type {
+            let _impl = #closure;
+            _impl(#(#args_untyped_first),*)
+        }
+
+        #[generate_glsl_impl_inline(#ident_final_str)]
+        fn generate(#str_args_typed) -> String {
+            format!(#fmt_string, #str_args_untyped)
+        }
+    }).into()
 }
